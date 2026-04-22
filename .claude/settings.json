@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": "cd $CLAUDE_PROJECT_DIR && python -m pytest tests/ -x -q --timeout=30 2>&1 | tail -30"
+      }
+    ]
+  }
+}
