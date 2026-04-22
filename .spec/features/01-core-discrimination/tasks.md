@@ -27,7 +27,7 @@
 
 ## Task 1.3: Implement judge strategies
 
-- Status: pending
+- Status: done
 - Depends: 1.1, 1.2
 - Files: `src/hypothesize/core/judge.py`, `src/hypothesize/core/prompts.py`,
   `tests/core/test_judge.py`
