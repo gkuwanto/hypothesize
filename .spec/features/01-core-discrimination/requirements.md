@@ -26,8 +26,10 @@ real user systems, no MCP or CLI. All external dependencies are injected.
   `ProbingDimension` objects. Prompts live in `prompts.py` in the same
   module, separated for easy iteration.
 - `src/hypothesize/core/generate.py` implements `generate_candidates` which
-  takes a hypothesis, a list of dimensions, a context, and a count, and
-  returns `CandidateInput` objects. Budget-aware.
+  takes a hypothesis, a single `ProbingDimension`, a context, and a count,
+  and returns `CandidateInput` objects. The discrimination loop iterates
+  dimensions and calls `generate_candidates` once per dimension.
+  Budget-aware.
 - `src/hypothesize/core/discrimination.py` implements
   `find_discriminating_inputs` composing the above. Returns a
   `DiscriminationResult` with either the discriminating inputs or an

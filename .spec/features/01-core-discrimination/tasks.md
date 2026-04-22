@@ -2,7 +2,7 @@
 
 ## Task 1.1: Define core types
 
-- Status: pending
+- Status: done
 - Depends: none
 - Files: `src/hypothesize/core/types.py`, `tests/core/test_types.py`
 - Acceptance:
@@ -14,7 +14,7 @@
 
 ## Task 1.2: Define LLM backend protocol and mock
 
-- Status: pending
+- Status: done
 - Depends: 1.1
 - Files: `src/hypothesize/core/llm.py`, `tests/_fixtures/mock_backend.py`,
   `tests/core/test_llm_mock.py`
@@ -27,7 +27,7 @@
 
 ## Task 1.3: Implement judge strategies
 
-- Status: pending
+- Status: done
 - Depends: 1.1, 1.2
 - Files: `src/hypothesize/core/judge.py`, `src/hypothesize/core/prompts.py`,
   `tests/core/test_judge.py`
@@ -41,7 +41,7 @@
 
 ## Task 1.4: Implement hypothesis decomposer
 
-- Status: pending
+- Status: done
 - Depends: 1.1, 1.2
 - Files: `src/hypothesize/core/decompose.py`, `tests/core/test_decompose.py`
 - Acceptance:
@@ -54,7 +54,7 @@
 
 ## Task 1.5: Implement candidate input generator
 
-- Status: pending
+- Status: done
 - Depends: 1.4
 - Files: `src/hypothesize/core/generate.py`, `tests/core/test_generate.py`
 - Acceptance:
@@ -66,7 +66,7 @@
 
 ## Task 1.6: Implement discrimination filter with diversity heuristic
 
-- Status: pending
+- Status: done
 - Depends: 1.3, 1.5
 - Files: `src/hypothesize/core/discrimination.py`,
   `src/hypothesize/core/diversity.py`,
@@ -82,7 +82,7 @@
 
 ## Task 1.7: Feature review pass
 
-- Status: pending
+- Status: done
 - Depends: 1.1-1.6
 - Files: none (review only, no code changes)
 - Acceptance:
