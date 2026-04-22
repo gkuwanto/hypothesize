@@ -41,7 +41,7 @@
 
 ## Task 1.4: Implement hypothesis decomposer
 
-- Status: pending
+- Status: done
 - Depends: 1.1, 1.2
 - Files: `src/hypothesize/core/decompose.py`, `tests/core/test_decompose.py`
 - Acceptance:
