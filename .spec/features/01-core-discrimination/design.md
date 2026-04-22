@@ -122,7 +122,9 @@ async def find_discriminating_inputs(
     dimensions = await decompose_hypothesis(hypothesis, context, llm, budget)
 
     # Step 2: generate candidate inputs, spread across dimensions
-    per_dim = max(3, (target_n * 4) // len(dimensions))  # overgenerate
+    # Budget-aware per-dimension count
+    available_after_gen = budget.remaining() - estimated_eval_calls_per_candidate * target_n * 2
+    per_dim = max(3, min(5, (target_n * 2) // len(dimensions)))
     candidates: list[CandidateInput] = []
     for dim in dimensions:
         if budget.exhausted(): break
@@ -201,11 +203,28 @@ Initial prompts needed:
 - `rubric_judge_prompt(rubric, input_data, output) -> messages`
 - `pairwise_judge_prompt(hypothesis, input_data, output_a, output_b) -> messages`
 
-## Open questions
+## Resolved design decisions
 
-- [open] Should `decompose_hypothesis` return a fixed number of dimensions
-  or let the LLM decide? Leaning: LLM decides between 3 and 7, prompt
-  enforces range.
-- [open] Should `Budget` raise on exhaustion or return a sentinel? Leaning
-  sentinel (return empty list / no verdict), to avoid partial state.
-- [resolved] Cache rubric per hypothesis. Do not regenerate per input.
+- **Dimension count: LLM decides, bounded to 3-7.**
+  The prompt instructs the LLM to return between 3 and 7 dimensions. Code
+  validates after parsing; counts outside [3, 7] are treated as a parse
+  error and cause `decompose_hypothesis` to return an empty list, which
+  cascades to `InsufficientEvidence` at the top level with reason
+  `"decomposition returned N dimensions; expected 3-7"`. Do not silently
+  truncate or pad.
+
+- **Budget exhaustion: sentinel, not exception.**
+  `Budget.charge(n)` never raises; it unconditionally records the charge.
+  `.exhausted()` returns True when `calls_used >= max_llm_calls`. Functions
+  that make LLM calls must guard with explicit `if budget.exhausted()`
+  checks and return empty/degraded results on True: `decompose_hypothesis`
+  returns `[]`, `generate_candidates` returns `[]`, `judge.judge()` returns
+  `Verdict(passed=False, reason="budget_exhausted", judge_type=<original>)`.
+  The top-level `find_discriminating_inputs` has explicit `break` on
+  exhaustion at each loop boundary (already shown in pseudocode) and
+  naturally reaches the insufficient-evidence branch. No partial state is
+  lost; any discriminating cases found before exhaustion are returned.
+
+- **Rubric caching per hypothesis.**
+  `RubricJudge` generates its rubric once per `Hypothesis` and caches it
+  for the lifetime of the judge instance. Do not regenerate per judgment.
