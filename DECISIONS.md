@@ -17,6 +17,16 @@ future sessions should know about.
 
 ## Entries
 
+## 2026-04-22 — Smoke test findings (pre-Feature 02)
+
+- Haiku returns JSON wrapped in markdown code fences despite prompt instructions.
+  This breaks all four json.loads sites in src/hypothesize/core/.
+- Decision: Feature 02 will add a JSONExtractor helper, wrap parse sites.
+  Core code signatures unchanged; fix is additive.
+- See scripts/SMOKE_FINDINGS.md for full evidence.
+- Smoke test should be re-run as part of Feature 02 review.
+
+
 ## 2026-04-22 — Feature 01 complete
 
 - Decision: Feature 01 (core discrimination) shipped end to end.
