@@ -14,7 +14,7 @@
 
 ## Task 1.2: Define LLM backend protocol and mock
 
-- Status: pending
+- Status: done
 - Depends: 1.1
 - Files: `src/hypothesize/core/llm.py`, `tests/_fixtures/mock_backend.py`,
   `tests/core/test_llm_mock.py`
