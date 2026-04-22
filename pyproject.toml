@@ -26,6 +26,8 @@ dev = [
     "pytest-cov>=5.0",
     "pytest-timeout>=2.3",
     "pytest-asyncio>=0.24",
+    "pytest-xdist>=3.6",
+    "pytest-snapshot>=0.9",
     "ruff>=0.6",
     "mypy>=1.10",
 ]
@@ -40,7 +42,11 @@ packages = ["src/hypothesize"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-ra --timeout=30"
+addopts = "-ra --timeout=30 --strict-markers"
+markers = [
+    "live: tests that make real LLM API calls (skipped by default)",
+    "slow: tests that take more than 5 seconds",
+]
 
 [tool.ruff]
 line-length = 100
