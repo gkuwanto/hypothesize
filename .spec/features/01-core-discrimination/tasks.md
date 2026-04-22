@@ -2,7 +2,7 @@
 
 ## Task 1.1: Define core types
 
-- Status: pending
+- Status: done
 - Depends: none
 - Files: `src/hypothesize/core/types.py`, `tests/core/test_types.py`
 - Acceptance:
