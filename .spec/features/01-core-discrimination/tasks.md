@@ -54,7 +54,7 @@
 
 ## Task 1.5: Implement candidate input generator
 
-- Status: pending
+- Status: done
 - Depends: 1.4
 - Files: `src/hypothesize/core/generate.py`, `tests/core/test_generate.py`
 - Acceptance:
