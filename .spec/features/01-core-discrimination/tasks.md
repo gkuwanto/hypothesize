@@ -82,7 +82,7 @@
 
 ## Task 1.7: Feature review pass
 
-- Status: pending
+- Status: done
 - Depends: 1.1-1.6
 - Files: none (review only, no code changes)
 - Acceptance:
