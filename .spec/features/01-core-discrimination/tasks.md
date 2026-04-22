@@ -66,7 +66,7 @@
 
 ## Task 1.6: Implement discrimination filter with diversity heuristic
 
-- Status: pending
+- Status: done
 - Depends: 1.3, 1.5
 - Files: `src/hypothesize/core/discrimination.py`,
   `src/hypothesize/core/diversity.py`,
