@@ -8,10 +8,9 @@ empty list, which the caller treats as insufficient evidence.
 
 from __future__ import annotations
 
-import json
-
 from pydantic import ValidationError
 
+from hypothesize.core.json_extract import parse_json_response
 from hypothesize.core.llm import LLMBackend
 from hypothesize.core.prompts import decompose_hypothesis_prompt
 from hypothesize.core.types import Budget, Hypothesis, ProbingDimension
@@ -34,10 +33,7 @@ async def decompose_hypothesis(
     raw = await llm.complete(messages)
     budget.charge()
 
-    try:
-        payload = json.loads(raw)
-    except (json.JSONDecodeError, TypeError):
-        return []
+    payload = parse_json_response(raw)
     if not isinstance(payload, dict):
         return []
     raw_dims = payload.get("dimensions")

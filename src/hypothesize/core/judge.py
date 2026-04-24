@@ -18,9 +18,9 @@ is exhausted before a call is made.
 
 from __future__ import annotations
 
-import json
 from typing import Any, Protocol
 
+from hypothesize.core.json_extract import parse_json_response
 from hypothesize.core.llm import LLMBackend
 from hypothesize.core.prompts import (
     build_rubric_prompt,
@@ -51,10 +51,7 @@ def _budget_exhausted_verdict(judge_type: str) -> Verdict:
 
 
 def _parse_verdict_payload(text: str) -> dict[str, Any] | None:
-    try:
-        data = json.loads(text)
-    except (json.JSONDecodeError, TypeError):
-        return None
+    data = parse_json_response(text)
     if not isinstance(data, dict):
         return None
     return data

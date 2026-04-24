@@ -184,6 +184,25 @@ async def test_rubric_judge_budget_exhausted_returns_sentinel_verdict(
     assert len(backend.calls) == 0  # no LLM call made
 
 
+async def test_rubric_judge_fenced_json_response_parses_like_clean(
+    hypothesis: Hypothesis, budget: Budget
+) -> None:
+    """Regression: fenced rubric-judge JSON must parse identically."""
+    verdict = json.dumps({"passed": True, "reason": "ok"})
+    fenced = f"```json\n{verdict}\n```"
+    backend = MockBackend(responses=["RUBRIC", fenced])
+    j = RubricJudge(llm=backend)
+    v = await j.judge(
+        input_data={"q": "x"},
+        output={"o": "y"},
+        hypothesis=hypothesis,
+        budget=budget,
+    )
+    assert v.passed is True
+    assert v.reason == "ok"
+    assert v.judge_type == "rubric"
+
+
 async def test_rubric_judge_empty_output_still_judged(
     hypothesis: Hypothesis, budget: Budget
 ) -> None:
@@ -252,6 +271,32 @@ async def test_pairwise_judge_malformed_response_returns_failing_verdicts(
     assert vb.passed is False
     assert va.judge_type == "pairwise"
     assert vb.judge_type == "pairwise"
+
+
+async def test_pairwise_judge_fenced_json_response_parses_like_clean(
+    hypothesis: Hypothesis, budget: Budget
+) -> None:
+    """Regression: fenced pairwise-judge JSON must parse identically."""
+    verdict = json.dumps(
+        {
+            "a": {"passed": False, "reason": "rA"},
+            "b": {"passed": True, "reason": "rB"},
+        }
+    )
+    fenced = f"```json\n{verdict}\n```"
+    backend = MockBackend(responses=[fenced])
+    j = PairwiseJudge(llm=backend)
+    va, vb = await j.judge_pair(
+        input_data={"q": "x"},
+        output_a={"o": "a"},
+        output_b={"o": "b"},
+        hypothesis=hypothesis,
+        budget=budget,
+    )
+    assert va.passed is False
+    assert vb.passed is True
+    assert va.reason == "rA"
+    assert vb.reason == "rB"
 
 
 async def test_pairwise_judge_budget_exhausted(hypothesis: Hypothesis) -> None:

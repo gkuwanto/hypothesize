@@ -55,7 +55,7 @@
 
 ## Task 2.2: Apply JSON extractor at four parse sites in core
 
-- Status: pending
+- Status: done
 - Depends: 2.1
 - Files: `src/hypothesize/core/decompose.py`,
   `src/hypothesize/core/generate.py`,
