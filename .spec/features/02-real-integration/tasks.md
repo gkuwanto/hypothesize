@@ -74,7 +74,7 @@
 
 ## Task 2.3: AnthropicConfig and AnthropicBackend
 
-- Status: pending
+- Status: done
 - Depends: none (can run in parallel with 2.1/2.2)
 - Files: `src/hypothesize/llm/__init__.py`,
   `src/hypothesize/llm/config.py`,
