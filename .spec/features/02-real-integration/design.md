@@ -178,11 +178,15 @@ Algorithm:
    Strip an optional language tag on the opening fence. Try
    `json.loads` on the extracted body. On success, return.
 4. Try brace-slicing: find the first `{` or `[`; find the matching
-   closer by naive bracket counting (ignoring those inside string
-   literals). Try `json.loads` on that substring. On success, return.
-5. Trailing-comma repair: take the result of step 4's slice (or the
-   original if no slice found one) and regex-remove `,\s*}` and
-   `,\s*]`. Try `json.loads` once more. On success, return.
+   closer by state-machine bracket counting that correctly handles
+   JSON string literals, including escape sequences (`\"`, `\\`,
+   `\u....`). Try `json.loads` on that substring. On success, return.
+5. Trailing-comma repair: operate on the best candidate string from
+   prior steps — step 4's brace-slice if it found one, else step 3's
+   fence-body if that succeeded, else the original raw input. Using
+   the same state-machine scanner from step 4, remove commas that
+   precede `}` or `]` when outside a string literal. Attempt the
+   repair and call `json.loads` one final time. On success, return.
 6. Return None.
 
 The five-step ladder is defensive in depth. Step 2 covers clean

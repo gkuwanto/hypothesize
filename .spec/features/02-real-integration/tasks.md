@@ -11,12 +11,44 @@
   - `parse_json_response(raw: str) -> Any | None` implements the
     five-step ladder in `design.md` (clean parse → fence-strip →
     brace-slice → trailing-comma repair → None).
-  - ≥ 25 unit tests covering clean JSON, ` ```json ` fence, bare
-    ` ``` ` fence, alternate-language-tag fence, leading prose,
-    trailing prose, both-prose, trailing commas in object and array,
-    array root, whitespace, empty string, malformed JSON (None),
-    unquoted keys (None — do not mask), single-quoted strings
-    (None), double-fenced, embedded fence inside a string value.
+  - ≥ 25 unit tests. The corpus must include, as named cases, each
+    of the following — these exercise the state-machine-sensitive
+    and framing-sensitive failure modes the algorithm is designed
+    to handle:
+    - clean JSON object
+    - ` ```json ` fenced object
+    - bare ` ``` ` fenced object (no language tag)
+    - alternate-language-tag fence (e.g. ` ```python `,
+      ` ```javascript `)
+    - leading prose before the JSON
+      ("Sure, here's your JSON: { ... }")
+    - trailing prose after the JSON
+      ("{ ... }. Let me know if...")
+    - both fences and leading prose
+      ("Here's the result:\n\\`\\`\\`json\n{...}\n\\`\\`\\`")
+    - valid JSON array at root (step 4 must handle `[` as well as
+      `{`)
+    - trailing comma in object
+    - trailing comma in array
+    - string value containing an escaped quote character
+      (`{"msg": "she said \"hi\""}`) — must not confuse the
+      state-machine scanner
+    - string value containing a literal `{` or `}` inside the
+      string (`{"template": "use {name}"}`) — brackets inside
+      strings must not be counted
+    - string value ending in `,]` or `,}` as literal characters
+      (`{"note": "see list,]"}`) — trailing-comma repair must not
+      touch commas inside strings
+    - nested JSON-in-string (a string value that itself is a JSON
+      blob: `{"payload": "{\"x\": 1}"}`) — scanner must treat the
+      inner braces as part of the string
+    - double-fenced input (fence inside fence)
+    - embedded code-fence inside a string value
+    - `null` / None / empty-string input (returns None)
+    - whitespace-only input (returns None)
+    - malformed JSON — mismatched brackets (returns None)
+    - unquoted keys (returns None — do not mask)
+    - single-quoted strings (returns None — do not mask)
   - One test loads the saved first-smoke response fixture and
     asserts parse to a dict with `dimensions` of length 3-7.
   - Import is free of side effects.
