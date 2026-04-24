@@ -104,7 +104,7 @@
 
 ## Task 2.4: SystemAdapter protocol and config loader
 
-- Status: pending
+- Status: done
 - Depends: none
 - Files: `src/hypothesize/adapters/__init__.py`,
   `src/hypothesize/adapters/base.py`,
