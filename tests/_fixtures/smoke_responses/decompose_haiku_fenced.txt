@@ -1,0 +1,42 @@
+```json
+{
+  "dimensions": [
+    {
+      "name": "Sarcasm Signal Strength",
+      "description": "Degree of incongruity between surface positive words and underlying negative intent.",
+      "examples": [
+        "Oh, just fantastic. Another Monday.",
+        "Wow, what a *brilliant* idea (not).",
+        "Yeah, I *love* waiting in line for three hours."
+      ]
+    },
+    {
+      "name": "Contextual Clues Available",
+      "description": "Presence of explicit contextual markers (e.g. /s, scare quotes, hyperbole) that disambiguate sarcastic intent.",
+      "examples": [
+        "That was super helpful /s",
+        "\"Great\" service, as always.",
+        "Absolutely the best experience of my life (obviously)."
+      ]
+    },
+    {
+      "name": "Domain Familiarity Required",
+      "description": "Whether detecting sarcasm requires world knowledge about the topic being discussed.",
+      "examples": [
+        "Sure, because everyone loves a four-hour status meeting.",
+        "Perfect timing for the power to go out during the demo.",
+        "The documentation is extremely clear and up to date."
+      ]
+    },
+    {
+      "name": "Politeness Veneer",
+      "description": "Use of polite or neutral surface forms that mask negative sentiment.",
+      "examples": [
+        "Thank you for your quick response, only three weeks late.",
+        "I appreciate the thorough lack of detail.",
+        "Kind of you to notice, after the fact."
+      ]
+    }
+  ]
+}
+```

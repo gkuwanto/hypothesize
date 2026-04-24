@@ -2,7 +2,7 @@
 
 ## Task 2.1: JSON extractor utility
 
-- Status: pending
+- Status: done
 - Depends: none
 - Files: `src/hypothesize/core/json_extract.py`,
   `tests/core/test_json_extract.py`,
