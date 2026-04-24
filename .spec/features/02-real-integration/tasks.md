@@ -123,7 +123,7 @@
 
 ## Task 2.5: Python module adapter
 
-- Status: pending
+- Status: done
 - Depends: 2.4
 - Files: `src/hypothesize/adapters/python_module.py`,
   `tests/adapters/test_python_module.py`,
