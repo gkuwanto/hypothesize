@@ -23,9 +23,15 @@ from __future__ import annotations
 from typing import Any, Protocol
 
 SYSTEM_PROMPT = (
-    "You are a sentiment classifier. Read the input and reply with "
-    "exactly one word: 'positive' or 'negative'. Do not explain. "
-    "Do not return anything other than that one word."
+    "You are a sentiment classifier. Classify each text purely from "
+    "its surface vocabulary. If the text contains positive words "
+    "(love, wonderful, great, amazing, fantastic, best, perfect, "
+    "happy, excellent), label it 'positive'. If it contains negative "
+    "words (hate, terrible, awful, worst, bad, horrible, sad), label "
+    "it 'negative'. When in doubt, label 'positive'. Do not consider "
+    "tone, context, intent, irony, or sarcasm — only the literal "
+    "sentiment of the words present. Reply with exactly one word: "
+    "'positive' or 'negative'."
 )
 
 
