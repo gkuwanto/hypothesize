@@ -184,11 +184,13 @@
 
 ## Task 2.8: Live integration tests
 
-- Status: pending
+- Status: done
 - Depends: 2.3, 2.5, 2.7
-- Files: `tests/live/__init__.py`,
-  `tests/live/test_anthropic_live.py`,
-  `tests/live/test_pipeline_live.py`.
+- Files: `tests/_live/__init__.py`,
+  `tests/_live/conftest.py`,
+  `tests/_live/test_anthropic_live.py`,
+  `tests/_live/test_pipeline_live.py`,
+  `tests/conftest.py` (collection-modifier hook).
 - Acceptance:
   - Both files declare `pytestmark = pytest.mark.live`.
   - `test_anthropic_live.py`: one tiny `complete(...)` round trip,
