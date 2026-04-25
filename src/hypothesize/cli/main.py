@@ -11,6 +11,7 @@ from __future__ import annotations
 import click
 
 from hypothesize import __version__
+from hypothesize.cli.run import run_cmd
 
 
 @click.group(
@@ -21,10 +22,7 @@ def cli() -> None:
     """Hypothesize CLI entry point."""
 
 
-@cli.command(name="run")
-def run_cmd() -> None:
-    """Run discrimination against a system config."""
-    click.echo("run not implemented yet")
+cli.add_command(run_cmd)
 
 
 @cli.command(name="list")

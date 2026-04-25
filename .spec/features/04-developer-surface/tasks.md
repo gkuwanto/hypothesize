@@ -36,7 +36,7 @@ calls in this session.
 
 ## Task 4.2: `hypothesize run` end-to-end (with MockBackend)
 
-- Status: pending
+- Status: done
 - Depends: 4.1
 - Files:
   - `src/hypothesize/cli/config.py` (new — `RunConfig` model + loader)

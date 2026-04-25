@@ -23,11 +23,12 @@ def test_help_lists_subcommands() -> None:
         assert sub in result.output
 
 
-def test_run_stub_exits_zero_with_placeholder() -> None:
+def test_run_help_describes_required_options() -> None:
     runner = CliRunner()
-    result = runner.invoke(cli, ["run"])
+    result = runner.invoke(cli, ["run", "--help"])
     assert result.exit_code == 0
-    assert "not implemented" in result.output
+    for opt in ("--config", "--hypothesis", "--output", "--target-n", "--budget"):
+        assert opt in result.output
 
 
 def test_list_stub_exits_zero_with_placeholder() -> None:
