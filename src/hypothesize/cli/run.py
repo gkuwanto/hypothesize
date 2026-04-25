@@ -69,10 +69,12 @@ def _slugify(text: str, max_len: int = 40) -> str:
 
 
 def _default_output_path(hypothesis_text: str) -> Path:
-    today = datetime.now(UTC).strftime("%Y_%m_%d")
+    # Full timestamp (UTC, second precision) — multiple runs in the
+    # same day with the same hypothesis must not clobber each other.
+    stamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     return (
         Path("tests/discriminating")
-        / f"{_slugify(hypothesis_text)}_{today}.yaml"
+        / f"{_slugify(hypothesis_text)}_{stamp}.yaml"
     )
 
 
@@ -147,7 +149,7 @@ def _resolve_hypothesis(
     "output_path",
     type=click.Path(path_type=Path),
     default=None,
-    help="Output YAML path. Default: tests/discriminating/<slug>_<date>.yaml.",
+    help="Output YAML path. Default: tests/discriminating/<slug>_<YYYYMMDD_HHMMSS>.yaml.",
 )
 @click.option(
     "--target-n",

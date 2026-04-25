@@ -29,8 +29,9 @@ server into Claude Desktop.
   the test harness (no live calls), the command produces a YAML that
   matches the documented schema.
 - The CLI respects sensible defaults: output path
-  `tests/discriminating/<slug>_<YYYY_MM_DD>.yaml`, target-n=5,
-  budget=100. Defaults are documented in `--help`.
+  `tests/discriminating/<slug>_<YYYYMMDD_HHMMSS>.yaml` (UTC, second
+  precision so multiple same-day runs never clobber each other),
+  target-n=5, budget=100. Defaults are documented in `--help`.
 - `hypothesize list [PATH]` prints any hypothesize-generated YAML
   benchmarks found under `PATH` (default: cwd), one per line.
 - `hypothesize validate PATH` reads a benchmark YAML and prints a

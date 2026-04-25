@@ -82,7 +82,7 @@ Options:
   -c, --config PATH      Path to RunConfig YAML  [required]
   -H, --hypothesis TEXT  Override hypothesis text
   -o, --output PATH      Output YAML path (default:
-                         tests/discriminating/<slug>_<date>.yaml)
+                         tests/discriminating/<slug>_<YYYYMMDD_HHMMSS>.yaml)
   -n, --target-n INT     Target number of discriminating cases (default: 5)
   -b, --budget INT       Max LLM calls (default: 100)
   --backend [anthropic|mock]
