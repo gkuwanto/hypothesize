@@ -18,4 +18,19 @@ class AutoAlternativeUnavailable(Exception):  # noqa: N818 — spec-named
     which case the adapter has no hook for plugging in a rewritten
     prompt. The exception message should name the convention and
     point the user at a worked example.
+
+    Also raised by ``make_auto_alternative`` when the LLM's rewrite
+    response cannot be parsed as JSON, or fails to match the expected
+    ``{"rewritten_prompt": str, "rationale": str}`` shape — both are
+    pre-pipeline failures that block alternative construction.
+    """
+
+
+class BudgetExhausted(Exception):  # noqa: N818 — spec-named
+    """The supplied ``Budget`` was already exhausted on entry.
+
+    Raised by ``make_auto_alternative`` when its pre-call budget check
+    fires. This is the pre-pipeline analogue of the core algorithm's
+    sentinel-return pattern: setup-time budget exhaustion is loud, mid-
+    pipeline exhaustion is silent (an empty list / malformed-verdict).
     """

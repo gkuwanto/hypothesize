@@ -22,6 +22,25 @@ except ImportError:
     _TYPES_AVAILABLE = False
 
 
+def pytest_collection_modifyitems(
+    config: pytest.Config, items: list[pytest.Item]
+) -> None:
+    """Skip live tests unless ``-m live`` (or another live-aware expr) is set.
+
+    The PostToolUse hook runs ``pytest -x -q --timeout=30`` on every
+    file edit and must not make network calls. Live tests are opt-in via
+    ``pytest -m live``; any other invocation marks them as skipped at
+    collection time so accidental runs are harmless rather than slow.
+    """
+    markexpr = config.getoption("markexpr", default="") or ""
+    if "live" in markexpr:
+        return
+    skip = pytest.mark.skip(reason="live tests require '-m live'")
+    for item in items:
+        if "live" in item.keywords:
+            item.add_marker(skip)
+
+
 def _requires_types() -> None:
     if not _TYPES_AVAILABLE:
         pytest.skip(

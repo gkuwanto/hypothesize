@@ -163,7 +163,7 @@
 
 ## Task 2.7: Automatic alternative generation
 
-- Status: pending
+- Status: done
 - Depends: 2.3, 2.5
 - Files: `src/hypothesize/adapters/auto_alternative.py`,
   `src/hypothesize/adapters/errors.py` (defines
@@ -184,11 +184,13 @@
 
 ## Task 2.8: Live integration tests
 
-- Status: pending
+- Status: done
 - Depends: 2.3, 2.5, 2.7
-- Files: `tests/live/__init__.py`,
-  `tests/live/test_anthropic_live.py`,
-  `tests/live/test_pipeline_live.py`.
+- Files: `tests/_live/__init__.py`,
+  `tests/_live/conftest.py`,
+  `tests/_live/test_anthropic_live.py`,
+  `tests/_live/test_pipeline_live.py`,
+  `tests/conftest.py` (collection-modifier hook).
 - Acceptance:
   - Both files declare `pytestmark = pytest.mark.live`.
   - `test_anthropic_live.py`: one tiny `complete(...)` round trip,
@@ -205,7 +207,7 @@
 
 ## Task 2.9: Re-run smoke test and document findings
 
-- Status: pending
+- Status: done
 - Depends: 2.2, 2.3, 2.7
 - Files: `scripts/smoke_test.py` (minimal edit to consume
   `AnthropicBackend`), `scripts/SMOKE_FINDINGS_2.md` (new).
@@ -222,7 +224,7 @@
 
 ## Task 2.10: Feature 02 review pass
 
-- Status: pending
+- Status: done
 - Depends: 2.1–2.9
 - Files: none (review only; appends `DECISIONS.md`, updates task
   statuses).
