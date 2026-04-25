@@ -1,0 +1,46 @@
+# ACME support chatbot — emoji-overuse filter-pass example.
+#
+# This example operates like examples/hotpotqa: a fixed candidate pool
+# (30 hand-written customer questions) and a programmatic judge
+# (EmojiCountJudge), not LLM-generated candidates and a RubricJudge.
+# The standard discrimination pipeline does not fit cleanly here, so
+# the filter pass runs via:
+#
+#   python examples/acme_support/run_filter.py
+#
+# This config is preserved as documentation of the system shape and
+# to share LLM/budget settings with the script. The script loads the
+# YAML via `load_run_config` and uses `current.module_path`,
+# `alternative.module_path`, `llm.default_model`, and `budget`.
+#
+# Note: AlternativeConfig has no `prompt_override` field. The script
+# explicitly invokes the alternative runner with NO_EMOJI_SYSTEM_PROMPT
+# imported from system.py — see run_filter.py.
+
+name: acme-support-emoji
+
+current:
+  adapter: python_module
+  module_path: examples/acme_support/system.py
+  entrypoint: run
+
+alternative:
+  adapter: python_module
+  module_path: examples/acme_support/system.py
+  entrypoint: run
+
+hypothesis:
+  text: >-
+    the chatbot uses excessive emojis in customer support responses
+  context_refs: []
+
+llm:
+  default_model: claude-haiku-4-5-20251001
+  max_tokens: 512
+
+budget:
+  max_llm_calls: 200
+
+defaults:
+  target_n: 10
+  min_required: 1
