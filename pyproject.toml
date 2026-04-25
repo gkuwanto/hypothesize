@@ -34,7 +34,7 @@ dev = [
 ]
 
 [project.scripts]
-hypothesize = "hypothesize.cli.main:main"
+hypothesize = "hypothesize.cli.main:cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hypothesize"]

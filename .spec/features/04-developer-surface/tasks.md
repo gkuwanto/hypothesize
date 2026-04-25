@@ -7,7 +7,7 @@ calls in this session.
 
 ## Task 4.1: CLI scaffolding and Click group
 
-- Status: pending
+- Status: done
 - Depends: none
 - Files:
   - `src/hypothesize/cli/__init__.py` (new)
