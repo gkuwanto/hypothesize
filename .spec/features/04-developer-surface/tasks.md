@@ -164,7 +164,7 @@ calls in this session.
 
 ## Task 4.6: MCP server scaffolding
 
-- Status: pending
+- Status: done
 - Depends: 4.2 (depends on `cli/runner.py`'s `run_discrimination`
   function, which the `run_discrimination` MCP tool reuses)
 - Files:
