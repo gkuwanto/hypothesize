@@ -17,6 +17,7 @@ updating this file and `pyproject.toml` in the same commit.
 - `httpx` — HTTP adapter
 - `datasets` — HuggingFace dataset loading for examples
 - `mcp` — MCP server framework
+- `python-dotenv` — loads API keys from .env for scripts and live tests
 
 Dev dependencies:
 
