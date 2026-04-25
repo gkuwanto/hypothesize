@@ -1,0 +1,665 @@
+hypothesis: the chatbot uses excessive emojis in customer support responses
+metadata:
+  generated_at: '2026-04-25T23:52:06.825169Z'
+  model: claude-haiku-4-5-20251001
+  budget_used: 60
+  budget_max: 200
+  status: ok
+  config_name: acme-support-emoji
+  candidate_source: examples/acme_support/data/customer_questions.jsonl
+  candidates_total: 30
+  stats:
+    both_clean: 21
+    both_emoji: 0
+    base_emoji_only: 9
+    no_emoji_only: 0
+test_cases:
+- input:
+    question: How do I reset my password?
+  expected_behavior: response should contain zero emojis (no_emoji prompt produced
+    0)
+  discrimination_evidence:
+    id: q01
+    category: account_access
+    current_output:
+      response: "I'd be happy to help you reset your password! \U0001F510 \n\nHere's\
+        \ how: Visit our login page and click **\"Forgot Password?\"** at the bottom.\
+        \ Enter your email address, and we'll send you a reset link. Just follow the\
+        \ instructions in that email to create a new password, and you'll be all set!\n\
+        \nIs there anything else I can help you with?"
+    alternative_output:
+      response: I'd be happy to help you reset your password! Please visit our login
+        page and click the "Forgot Password" link, then enter the email address associated
+        with your account. You'll receive an email with instructions to create a new
+        password within a few minutes. If you don't see it, please check your spam
+        folder.
+    base_emoji_count: 1
+    no_emoji_count: 0
+- input:
+    question: I can't log in to my account, what should I do?
+  expected_behavior: response should contain zero emojis (no_emoji prompt produced
+    0)
+  discrimination_evidence:
+    id: q02
+    category: account_access
+    current_output:
+      response: 'I''m sorry you''re having trouble logging in! Here are a few quick
+        things to try: First, check if you''ve entered the correct email and password
+        (watch for caps lock!). If that doesn''t work, click the "Forgot Password"
+        link to reset it. If you''re still stuck after trying these steps, I''m happy
+        to help further—just let me know! 😊'
+    alternative_output:
+      response: I'm sorry you're having trouble logging in—let me help you get back
+        to your account right away. First, try resetting your password by clicking
+        "Forgot Password" on the login page and following the email instructions.
+        If you've already tried that or aren't receiving the reset email, please let
+        me know your account email address and I can look into this further for you.
+    base_emoji_count: 1
+    no_emoji_count: 0
+- input:
+    question: My account has been locked, can you help?
+  expected_behavior: response should contain zero emojis (no_emoji prompt produced
+    0)
+  discrimination_evidence:
+    id: q03
+    category: account_access
+    current_output:
+      response: I'd be happy to help you get back into your account! 🔐 To get started,
+        could you please provide your email address or account username? Once I have
+        that, I can guide you through the unlock process or escalate this to our account
+        specialists if needed.
+    alternative_output:
+      response: I'd be happy to help you regain access to your account. To get started,
+        could you please provide me with the email address or account number associated
+        with your locked account? Once I have that information, I can look into what
+        happened and guide you through the unlock process.
+    base_emoji_count: 1
+    no_emoji_count: 0
+- input:
+    question: How do I change the email address on my account?
+  expected_behavior: response should contain zero emojis (no_emoji prompt produced
+    0)
+  discrimination_evidence:
+    id: q04
+    category: account_access
+    current_output:
+      response: Great question! To change your email address, just log into your account
+        and go to **Account Settings** → **Email Address**. From there, you'll be
+        able to enter your new email and confirm the change. If you run into any trouble,
+        feel free to reach out and I'm happy to help! 😊
+    alternative_output:
+      response: I'd be happy to help you update your email address. You can change
+        it by logging into your account, going to Account Settings, and selecting
+        "Email Address" from the menu. If you run into any trouble with those steps,
+        just let me know and I can walk you through it in more detail.
+    base_emoji_count: 1
+    no_emoji_count: 0
+- input:
+    question: I forgot my username, how do I find it?
+  expected_behavior: response should contain zero emojis (no_emoji prompt produced
+    0)
+  discrimination_evidence:
+    id: q05
+    category: account_access
+    current_output:
+      response: No problem! You can recover your username by visiting our login page
+        and clicking **"Forgot Username?"** — just enter the email address associated
+        with your account, and we'll send it right to you. If you don't see that option
+        or need further help, feel free to reach out to our support team and we're
+        happy to look it up for you! 😊
+    alternative_output:
+      response: I'd be happy to help you recover your username! You can reset it by
+        visiting our login page and clicking "Forgot Username?" — we'll send you a
+        recovery link via email associated with your account. Alternatively, you can
+        contact our support team directly with your account email or phone number,
+        and we'll retrieve it for you right away.
+    base_emoji_count: 1
+    no_emoji_count: 0
+- input:
+    question: The app is really slow today, is there an outage?
+  expected_behavior: response should contain zero emojis (no_emoji prompt produced
+    0)
+  discrimination_evidence:
+    id: q13
+    category: product_issues
+    current_output:
+      response: 'I''m sorry you''re experiencing slowness! We''re not currently aware
+        of a major outage, but there can sometimes be intermittent performance issues.
+        A few quick things to try: restart the app, clear your cache, or check if
+        your internet connection is stable. If it''s still sluggish after that, please
+        let me know and I can escalate this to our technical team! 😊'
+    alternative_output:
+      response: I understand how frustrating that must be. We haven't reported any
+        widespread outages at the moment, but app performance can be affected by various
+        factors like network connectivity or server load. Have you tried clearing
+        your app cache or restarting the app? If the issue persists, I'm happy to
+        look into this further for you.
+    base_emoji_count: 1
+    no_emoji_count: 0
+- input:
+    question: How do I return an item I bought last week?
+  expected_behavior: response should contain zero emojis (no_emoji prompt produced
+    0)
+  discrimination_evidence:
+    id: q21
+    category: returns_refunds
+    current_output:
+      response: I'd be happy to help you with a return! To get you the most accurate
+        information, could you tell me a bit more—like what item you're returning
+        and whether there's an issue with it? In most cases, we offer returns within
+        30 days with a receipt, so you should be all set! 📦
+    alternative_output:
+      response: I'd be happy to help you with your return. To get you the quickest
+        assistance, could you please provide your order number or the email address
+        associated with your account? Once I have that information, I can look up
+        your purchase and walk you through our return process.
+    base_emoji_count: 1
+    no_emoji_count: 0
+- input:
+    question: How do I contact a real human, not a bot?
+  expected_behavior: response should contain zero emojis (no_emoji prompt produced
+    0)
+  discrimination_evidence:
+    id: q29
+    category: general_support
+    current_output:
+      response: I appreciate you asking! I'm actually an AI assistant, but I'm here
+        to help with many common questions right away. If you need to speak with a
+        human team member, I can direct you to our contact options—could you tell
+        me what you're trying to resolve so I can point you to the best resource?
+        📞
+    alternative_output:
+      response: I'd be happy to help! If you'd prefer to speak with a team member,
+        you can reach our customer support line at 1-800-ACME-NOW during business
+        hours (Monday-Friday, 9 AM-6 PM EST), and a real person will assist you. Is
+        there anything I can help you with in the meantime?
+    base_emoji_count: 1
+    no_emoji_count: 0
+- input:
+    question: Where can I find your terms of service?
+  expected_behavior: response should contain zero emojis (no_emoji prompt produced
+    0)
+  discrimination_evidence:
+    id: q30
+    category: general_support
+    current_output:
+      response: Great question! You can find our Terms of Service on our website—just
+        scroll down to the footer and look for the "Terms of Service" or "Legal" link.
+        If you have trouble locating it or need a direct link, I'm happy to help point
+        you in the right direction! 😊
+    alternative_output:
+      response: You can find our Terms of Service on our website by scrolling to the
+        footer and clicking the "Terms of Service" link. If you're having trouble
+        locating it, you can also reach out to our support team directly and we'll
+        send you a copy right away.
+    base_emoji_count: 1
+    no_emoji_count: 0
+all_rows:
+- id: q01
+  category: account_access
+  question: How do I reset my password?
+  base_response: "I'd be happy to help you reset your password! \U0001F510 \n\nHere's\
+    \ how: Visit our login page and click **\"Forgot Password?\"** at the bottom.\
+    \ Enter your email address, and we'll send you a reset link. Just follow the instructions\
+    \ in that email to create a new password, and you'll be all set!\n\nIs there anything\
+    \ else I can help you with?"
+  no_emoji_response: I'd be happy to help you reset your password! Please visit our
+    login page and click the "Forgot Password" link, then enter the email address
+    associated with your account. You'll receive an email with instructions to create
+    a new password within a few minutes. If you don't see it, please check your spam
+    folder.
+  base_emoji_count: 1
+  no_emoji_count: 0
+  base_pass: false
+  no_emoji_pass: true
+- id: q02
+  category: account_access
+  question: I can't log in to my account, what should I do?
+  base_response: 'I''m sorry you''re having trouble logging in! Here are a few quick
+    things to try: First, check if you''ve entered the correct email and password
+    (watch for caps lock!). If that doesn''t work, click the "Forgot Password" link
+    to reset it. If you''re still stuck after trying these steps, I''m happy to help
+    further—just let me know! 😊'
+  no_emoji_response: I'm sorry you're having trouble logging in—let me help you get
+    back to your account right away. First, try resetting your password by clicking
+    "Forgot Password" on the login page and following the email instructions. If you've
+    already tried that or aren't receiving the reset email, please let me know your
+    account email address and I can look into this further for you.
+  base_emoji_count: 1
+  no_emoji_count: 0
+  base_pass: false
+  no_emoji_pass: true
+- id: q03
+  category: account_access
+  question: My account has been locked, can you help?
+  base_response: I'd be happy to help you get back into your account! 🔐 To get started,
+    could you please provide your email address or account username? Once I have that,
+    I can guide you through the unlock process or escalate this to our account specialists
+    if needed.
+  no_emoji_response: I'd be happy to help you regain access to your account. To get
+    started, could you please provide me with the email address or account number
+    associated with your locked account? Once I have that information, I can look
+    into what happened and guide you through the unlock process.
+  base_emoji_count: 1
+  no_emoji_count: 0
+  base_pass: false
+  no_emoji_pass: true
+- id: q04
+  category: account_access
+  question: How do I change the email address on my account?
+  base_response: Great question! To change your email address, just log into your
+    account and go to **Account Settings** → **Email Address**. From there, you'll
+    be able to enter your new email and confirm the change. If you run into any trouble,
+    feel free to reach out and I'm happy to help! 😊
+  no_emoji_response: I'd be happy to help you update your email address. You can change
+    it by logging into your account, going to Account Settings, and selecting "Email
+    Address" from the menu. If you run into any trouble with those steps, just let
+    me know and I can walk you through it in more detail.
+  base_emoji_count: 1
+  no_emoji_count: 0
+  base_pass: false
+  no_emoji_pass: true
+- id: q05
+  category: account_access
+  question: I forgot my username, how do I find it?
+  base_response: No problem! You can recover your username by visiting our login page
+    and clicking **"Forgot Username?"** — just enter the email address associated
+    with your account, and we'll send it right to you. If you don't see that option
+    or need further help, feel free to reach out to our support team and we're happy
+    to look it up for you! 😊
+  no_emoji_response: I'd be happy to help you recover your username! You can reset
+    it by visiting our login page and clicking "Forgot Username?" — we'll send you
+    a recovery link via email associated with your account. Alternatively, you can
+    contact our support team directly with your account email or phone number, and
+    we'll retrieve it for you right away.
+  base_emoji_count: 1
+  no_emoji_count: 0
+  base_pass: false
+  no_emoji_pass: true
+- id: q06
+  category: billing
+  question: Why was my card charged twice this month?
+  base_response: I'm sorry to hear you were charged twice—that's definitely frustrating!
+    I'd be happy to help investigate this for you. Could you please provide your account
+    number or the email address associated with your account, along with the dates
+    of the charges? This will help me look into what happened right away.
+  no_emoji_response: I'm sorry to hear you were charged twice - that's definitely
+    frustrating. I'd be happy to help investigate this for you. Could you please provide
+    me with your account number or the email address associated with your account,
+    along with the dates of the charges? This will help me look into what happened
+    and get this resolved quickly.
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q07
+  category: billing
+  question: How do I cancel my subscription?
+  base_response: I'd be happy to help you cancel your subscription! The quickest way
+    is to log into your account on our website, go to **Settings > Subscriptions**,
+    and click the "Cancel Subscription" button. If you run into any trouble, just
+    let me know and I can walk you through it step-by-step!
+  no_emoji_response: I'd be happy to help you cancel your subscription. To process
+    this for you, I'll need a bit more information—could you please provide your account
+    email address or customer ID? Once I have that, I can walk you through the cancellation
+    process or handle it directly for you.
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q08
+  category: billing
+  question: Can I get a refund for last month's charge?
+  base_response: I'd be happy to help you with that! To process a refund, I'll need
+    a few quick details—could you share your order number or the email address associated
+    with your account? Once I have that, I can look into your charge and get this
+    sorted for you right away.
+  no_emoji_response: I'd be happy to help you with that! Could you please provide
+    me with your order number or the email address associated with your account so
+    I can look up the charge and review your refund options?
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q09
+  category: billing
+  question: My payment failed but money was deducted, where did it go?
+  base_response: I'm sorry you're experiencing this issue—I know how frustrating that
+    must be! This sometimes happens temporarily when a payment doesn't process, but
+    the authorization hold should drop from your account within 1-3 business days.
+    In the meantime, I'd be happy to help investigate further—could you tell me which
+    payment method you used and roughly when this occurred?
+  no_emoji_response: 'I''m sorry to hear you''re experiencing this issue—that''s frustrating!
+    When a payment fails but the funds are deducted, the charge is typically a temporary
+    authorization hold from your bank that will be released within 3-5 business days.
+    In the meantime, I''d like to help resolve this: could you provide your order
+    number and the payment method you used so I can investigate further?'
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q10
+  category: billing
+  question: How do I update my credit card information?
+  base_response: Great question! You can update your credit card by logging into your
+    account, going to the "Billing" or "Payment Methods" section, and selecting "Edit"
+    next to your current card. If you need extra help, our support team is happy to
+    walk you through it—just let me know!
+  no_emoji_response: I'm happy to help you update your payment method. You can update
+    your credit card information by logging into your account, navigating to the "Billing"
+    or "Payment Methods" section, and selecting "Edit Payment Information." If you
+    need any clarification on those steps or run into any issues, just let me know
+    and I'll walk you through it.
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q11
+  category: product_issues
+  question: The export feature isn't working for me, any ideas?
+  base_response: 'I''d be happy to help! A few quick things to try: First, make sure
+    you''re using a supported file format (PDF, CSV, or Excel typically work best).
+    If that doesn''t solve it, try clearing your browser cache or switching to a different
+    browser. If you''re still stuck after that, let me know what error message you''re
+    seeing and I can dig deeper!'
+  no_emoji_response: I'd be happy to help you troubleshoot the export feature. Could
+    you tell me a bit more about what's happening—are you getting an error message,
+    or is it just not responding when you try to export? Also, which file format are
+    you trying to export to?
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q12
+  category: product_issues
+  question: I keep getting an error 500 when I save, what's happening?
+  base_response: 'I''m sorry you''re experiencing that frustration! A 500 error typically
+    means our server encountered an unexpected issue. Here''s what I''d recommend:
+    try refreshing the page and attempting to save again, and if that doesn''t work,
+    try a different browser or clearing your cache. If the problem persists, please
+    let me know what you''re trying to save and any other details about when this
+    started, and I''ll escalate this to our technical team right away.'
+  no_emoji_response: I'm sorry you're experiencing that error! A 500 error typically
+    indicates a server-side issue on our end. Can you tell me a bit more about what
+    you're trying to save, and whether this just started happening or has been ongoing?
+    In the meantime, you could try refreshing your browser and attempting the save
+    again.
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q13
+  category: product_issues
+  question: The app is really slow today, is there an outage?
+  base_response: 'I''m sorry you''re experiencing slowness! We''re not currently aware
+    of a major outage, but there can sometimes be intermittent performance issues.
+    A few quick things to try: restart the app, clear your cache, or check if your
+    internet connection is stable. If it''s still sluggish after that, please let
+    me know and I can escalate this to our technical team! 😊'
+  no_emoji_response: I understand how frustrating that must be. We haven't reported
+    any widespread outages at the moment, but app performance can be affected by various
+    factors like network connectivity or server load. Have you tried clearing your
+    app cache or restarting the app? If the issue persists, I'm happy to look into
+    this further for you.
+  base_emoji_count: 1
+  no_emoji_count: 0
+  base_pass: false
+  no_emoji_pass: true
+- id: q14
+  category: product_issues
+  question: I lost all my work after the update, can it be recovered?
+  base_response: I'm really sorry to hear that happened—that's frustrating! The good
+    news is we often have recovery options available. Can you tell me a bit more about
+    what you're working on and when the update occurred? That'll help me find the
+    best solution for you.
+  no_emoji_response: I'm very sorry to hear you lost your work—I understand how frustrating
+    that must be. The good news is that we may be able to recover it. Can you tell
+    me when the update occurred and whether you had auto-save enabled? I'll need those
+    details to help you explore recovery options.
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q15
+  category: product_issues
+  question: Notifications stopped coming through to my phone, why?
+  base_response: I'd be happy to help you get those notifications working again! A
+    few common culprits are notification settings being turned off in the app or your
+    phone's settings, or sometimes an app update can reset preferences. Could you
+    tell me if you're using iOS or Android, and whether you see any notification settings
+    within the ACME app itself?
+  no_emoji_response: I'd be happy to help you get notifications working again. This
+    could be due to a few things—your notification settings might have been accidentally
+    turned off in the app, your phone's permission settings could have changed, or
+    there might be a temporary sync issue. Could you let me know if you've recently
+    updated the app or made any changes to your phone's settings?
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q16
+  category: order_status
+  question: Where is my order? It was supposed to arrive yesterday.
+  base_response: I'd be happy to help you track down your order! To look up the status,
+    I'll need a bit of information from you—could you please share your order number
+    or the email address associated with your account? Once I have that, I can check
+    exactly where your package is and why it might be delayed.
+  no_emoji_response: I'd be happy to help you track down your order! To look into
+    this, I'll need a bit more information—could you please provide your order number
+    or the email address associated with your account? Once I have that, I can check
+    the status and see what's going on with your delivery.
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q17
+  category: order_status
+  question: Can you give me a tracking number for order 48291?
+  base_response: I'd be happy to help you track your order! However, I don't have
+    access to our order system right now. Could you please provide your email address
+    or account details associated with order 48291? Alternatively, you can check your
+    confirmation email—the tracking number is usually included there, or you can log
+    into your account on our website to find it.
+  no_emoji_response: I'd be happy to help you track your order. Unfortunately, I don't
+    have access to our order database from this chat. Could you please provide your
+    email address or account details so I can look up order 48291 and get you that
+    tracking number right away?
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q18
+  category: order_status
+  question: My package is marked delivered but I never got it.
+  base_response: I'm sorry to hear that! That's frustrating. I'd be happy to help
+    you track this down. Could you please provide your order number so I can look
+    into the delivery details and see what might have happened?
+  no_emoji_response: I'm sorry to hear your package didn't arrive as expected. I'd
+    be happy to help you track this down. Can you please provide your order number
+    so I can investigate what happened with your delivery?
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q19
+  category: order_status
+  question: How long does shipping usually take?
+  base_response: Great question! Standard shipping typically takes 5-7 business days,
+    while expedited shipping gets your order to you in 2-3 business days. If you let
+    me know your location or order number, I can give you a more specific timeline.
+    Is there anything else I can help you with today?
+  no_emoji_response: Great question! Standard shipping typically takes 5-7 business
+    days, while expedited shipping usually arrives within 2-3 business days. If you
+    let me know your location or order details, I can give you a more specific estimate
+    for your shipment.
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q20
+  category: order_status
+  question: Can I change the delivery address on my order?
+  base_response: Great question! Whether we can change your delivery address depends
+    on your order's status. If your order hasn't shipped yet, we can definitely help
+    you update it. Could you please provide your order number so I can check the current
+    status and get that changed for you right away?
+  no_emoji_response: I'd be happy to help you change your delivery address. To assist
+    you better, could you please provide your order number? Once I have that, I can
+    check the current status of your order and let you know if we can make that change
+    for you.
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q21
+  category: returns_refunds
+  question: How do I return an item I bought last week?
+  base_response: I'd be happy to help you with a return! To get you the most accurate
+    information, could you tell me a bit more—like what item you're returning and
+    whether there's an issue with it? In most cases, we offer returns within 30 days
+    with a receipt, so you should be all set! 📦
+  no_emoji_response: I'd be happy to help you with your return. To get you the quickest
+    assistance, could you please provide your order number or the email address associated
+    with your account? Once I have that information, I can look up your purchase and
+    walk you through our return process.
+  base_emoji_count: 1
+  no_emoji_count: 0
+  base_pass: false
+  no_emoji_pass: true
+- id: q22
+  category: returns_refunds
+  question: When will I get my refund? It's been two weeks.
+  base_response: I'd be happy to help you track down your refund! To give you the
+    most accurate information, could you please share your order number or the email
+    address associated with your account? Once I have that, I can check the status
+    right away and let you know exactly when you can expect it.
+  no_emoji_response: I'd be happy to help you track down your refund! To look into
+    this for you, could you please provide your order number or the email address
+    associated with your account? Once I have that information, I can check the status
+    and let you know exactly where things stand.
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q23
+  category: returns_refunds
+  question: Do you cover the return shipping cost?
+  base_response: Great question! Most of our returns qualify for free return shipping—we'll
+    email you a prepaid label to make the process super easy. If you let me know what
+    you're looking to return, I can confirm the specific details for your situation!
+  no_emoji_response: Great question! We cover return shipping costs for defective
+    items or if we made an error on our end. For standard returns due to change of
+    mind, return shipping is typically the customer's responsibility, though we always
+    recommend checking your specific order confirmation or our return policy page
+    for any promotions that might apply. Is there a particular item you're looking
+    to return?
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q24
+  category: returns_refunds
+  question: Can I exchange a product instead of returning it?
+  base_response: Absolutely! We'd be happy to help you exchange your product. Most
+    items can be exchanged for a different size, color, or style within 30 days of
+    purchase. Could you tell me what product you'd like to exchange and what you're
+    looking for instead? That way, I can make sure we have it in stock and get the
+    process started for you!
+  no_emoji_response: Absolutely! We'd be happy to help you exchange your product.
+    To get started, please let me know what item you'd like to exchange and what you'd
+    like to replace it with. Our team can guide you through the process and make sure
+    everything is sorted out smoothly.
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q25
+  category: returns_refunds
+  question: The item I got is broken, what are my options?
+  base_response: 'I''m sorry to hear your item arrived broken—that''s frustrating!
+    We''ll make this right. You have a few options: we can send you a replacement
+    right away, process a full refund, or arrange an exchange for a different item.
+    Could you tell me which product you ordered and what kind of damage it has? That
+    way I can get you the quickest resolution!'
+  no_emoji_response: 'I''m sorry to hear your item arrived broken—that''s frustrating!
+    Here are your options: we can send you a replacement right away, process a full
+    refund to your original payment method, or offer a store credit if you''d prefer.
+    Could you share your order number so I can get this resolved for you quickly?'
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q26
+  category: general_support
+  question: What are your customer service hours?
+  base_response: Hello! We're here to help you Monday through Friday, 9 AM to 6 PM
+    EST, and Saturdays from 10 AM to 4 PM EST. For urgent issues outside these hours,
+    feel free to leave a message and we'll get back to you first thing! Is there anything
+    I can assist you with today?
+  no_emoji_response: Thank you for reaching out to ACME Co. customer support! Our
+    team is available Monday through Friday from 9 AM to 6 PM EST, and we also offer
+    limited weekend support from 10 AM to 4 PM EST on Saturdays. For urgent matters
+    outside these hours, please feel free to submit a support ticket on our website
+    and we'll get back to you as soon as possible. How can I assist you today?
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q27
+  category: general_support
+  question: Do you have a phone number I can call?
+  base_response: I'd be happy to help! You can reach our customer support team at
+    **1-800-ACME-123** (1-800-226-3123). Our lines are open Monday through Friday,
+    9 AM to 6 PM EST. Is there anything else I can assist you with today?
+  no_emoji_response: I'd be happy to help you find our contact information. Our customer
+    support phone line is available at 1-800-ACME-123, and our team is ready to assist
+    you Monday through Friday, 9 AM to 6 PM EST. Is there anything I can help you
+    with today before you call, or would you prefer to reach out directly?
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q28
+  category: general_support
+  question: Is support available in Spanish?
+  base_response: ¡Por supuesto! Yes, we do offer support in Spanish! Feel free to
+    communicate with us in either English or Spanish—whichever is most comfortable
+    for you. How can I help you today?
+  no_emoji_response: Great question! Yes, we do have Spanish-language support available
+    for our customers. You can reach our Spanish-speaking team by calling our main
+    support line and selecting the Spanish language option, or you can let me know
+    how I can help you right now. What can I assist you with today?
+  base_emoji_count: 0
+  no_emoji_count: 0
+  base_pass: true
+  no_emoji_pass: true
+- id: q29
+  category: general_support
+  question: How do I contact a real human, not a bot?
+  base_response: I appreciate you asking! I'm actually an AI assistant, but I'm here
+    to help with many common questions right away. If you need to speak with a human
+    team member, I can direct you to our contact options—could you tell me what you're
+    trying to resolve so I can point you to the best resource? 📞
+  no_emoji_response: I'd be happy to help! If you'd prefer to speak with a team member,
+    you can reach our customer support line at 1-800-ACME-NOW during business hours
+    (Monday-Friday, 9 AM-6 PM EST), and a real person will assist you. Is there anything
+    I can help you with in the meantime?
+  base_emoji_count: 1
+  no_emoji_count: 0
+  base_pass: false
+  no_emoji_pass: true
+- id: q30
+  category: general_support
+  question: Where can I find your terms of service?
+  base_response: Great question! You can find our Terms of Service on our website—just
+    scroll down to the footer and look for the "Terms of Service" or "Legal" link.
+    If you have trouble locating it or need a direct link, I'm happy to help point
+    you in the right direction! 😊
+  no_emoji_response: You can find our Terms of Service on our website by scrolling
+    to the footer and clicking the "Terms of Service" link. If you're having trouble
+    locating it, you can also reach out to our support team directly and we'll send
+    you a copy right away.
+  base_emoji_count: 1
+  no_emoji_count: 0
+  base_pass: false
+  no_emoji_pass: true
