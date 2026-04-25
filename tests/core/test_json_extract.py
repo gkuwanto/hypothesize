@@ -217,3 +217,73 @@ def test_trailing_comma_not_touched_inside_string() -> None:
     # String contains ",}" as literal text; repair must not remove that comma.
     raw = '{"note": "ends with ,}", "ok": true}'
     assert parse_json_response(raw) == {"note": "ends with ,}", "ok": True}
+
+
+# ---------------------------------------------------------------------------
+# State-machine stress tests
+#
+# The corpus cases above for "escaped quote", "literal brace in string",
+# "literal comma+bracket in string", and "nested JSON in string" are all
+# valid JSON, so they win at step 2 (json.loads) without exercising the
+# state-machine scanner used by steps 4 and 5. The tests below force the
+# scanner to run on each of those features by either wrapping in prose
+# (forcing brace-slice) or appending a trailing comma (forcing repair),
+# so we genuinely verify the scanner handles the edge cases.
+# ---------------------------------------------------------------------------
+
+
+def test_state_machine_handles_escaped_quote_under_brace_slice() -> None:
+    # Leading prose forces step 4. Inside the JSON, ``\"`` must not be
+    # treated as an end-of-string by the scanner.
+    raw = r'Here is the JSON: {"msg": "she said \"hi\""}'
+    assert parse_json_response(raw) == {"msg": 'she said "hi"'}
+
+
+def test_state_machine_handles_escaped_backslash_under_brace_slice() -> None:
+    # ``\\`` followed by ``"`` is end-of-string; the scanner must skip
+    # the escape pair (\\) so the trailing ``"`` is recognized.
+    raw = r'Result: {"path": "C:\\Users\\x"}'
+    assert parse_json_response(raw) == {"path": r"C:\Users\x"}
+
+
+def test_state_machine_handles_literal_brace_under_trailing_comma_repair() -> None:
+    # Trailing comma forces step 5 to scan. The literal ``{`` and ``}``
+    # inside the string must not change the scanner's bracket depth.
+    raw = '{"template": "use {name}", "ok": true,}'
+    assert parse_json_response(raw) == {"template": "use {name}", "ok": True}
+
+
+def test_state_machine_handles_literal_brace_under_brace_slice() -> None:
+    # Trailing prose forces brace-slice. The literal ``{`` inside the
+    # string must not extend the slice past the true closer.
+    raw = '{"template": "use {name}"} -- end of message'
+    assert parse_json_response(raw) == {"template": "use {name}"}
+
+
+def test_state_machine_handles_literal_comma_bracket_under_repair() -> None:
+    # Trailing comma forces step 5. The ``,]`` literal inside the
+    # string must not be touched by the comma-removal pass.
+    raw = '{"note": "see list,]", "ok": true,}'
+    assert parse_json_response(raw) == {"note": "see list,]", "ok": True}
+
+
+def test_state_machine_handles_nested_json_in_string_under_brace_slice() -> None:
+    # Leading prose forces step 4. Inner braces appearing as escaped
+    # characters within the string must not affect bracket depth.
+    raw = r'Here: {"payload": "{\"x\": 1}"}'
+    assert parse_json_response(raw) == {"payload": '{"x": 1}'}
+
+
+def test_state_machine_handles_nested_json_in_string_under_repair() -> None:
+    # Force step 5; combined with the inner-brace string, a wrong
+    # bracket-counter would mis-locate the trailing comma.
+    raw = r'{"payload": "{\"x\": 1}", "ok": true,}'
+    assert parse_json_response(raw) == {"payload": '{"x": 1}', "ok": True}
+
+
+def test_state_machine_handles_quote_then_brace_in_string() -> None:
+    # An escaped quote immediately followed by a literal ``}`` inside
+    # the string is the most adversarial combo for a naive scanner.
+    raw = r'Note: {"msg": "she said \"go away\"}", "k": 1}'
+    assert parse_json_response(raw) == {"msg": 'she said "go away"}', "k": 1}
+
