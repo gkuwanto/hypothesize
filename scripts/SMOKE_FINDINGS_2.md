@@ -1,26 +1,37 @@
 # Smoke Test Findings — 2026-04-24 (run 2)
 
-Live re-run of `scripts/smoke_test.py` against the real Anthropic API, now
-through Feature 02's `AnthropicBackend` and `parse_json_response`. Model:
-`claude-haiku-4-5-20251001`. Wall time: 97.1s. Exit code: 0. Budget cap
-raised from 30 to 100 per the task spec.
+Live re-runs of `scripts/smoke_test.py` against the real Anthropic API,
+now through Feature 02's `AnthropicBackend` and `parse_json_response`.
+Model: `claude-haiku-4-5-20251001`. Wall time per run: ~97s. Exit code
+each: 0. Budget cap raised from 30 to 100 per the task spec.
 
 This document is the second-run companion to
 [`SMOKE_FINDINGS.md`](./SMOKE_FINDINGS.md). Read that one first for the
 parse-class baseline and Feature 02's motivation.
 
+The numbers below are taken from the first run; subsequent reruns
+produced very similar shapes — same call counts and parse cleanliness —
+but a *different* discrimination outcome. That difference is the most
+important finding of this session.
+
 ## Ran successfully?
 
-**Yes — end to end.** No Python exceptions, no API errors, no parse
-failures, exit 0. The discrimination algorithm reached the generate
-phase, the rubric-build phase, and the rubric-judge phase. Decompose,
-generate, and judge all returned cleanly-typed payloads.
+**Yes — end to end, consistently.** No Python exceptions, no API
+errors, no parse failures, exit 0 across all runs. The discrimination
+algorithm reached the generate, rubric-build, and rubric-judge phases.
+Decompose, generate, and judge all returned cleanly-typed payloads.
 
-But the algorithm produced `insufficient_evidence`: **0 of 18 candidates
-were discriminating**. The pipeline is wired correctly — the *result*
-exposes a different and more consequential class of issue, surfaced
-only because parse-class noise no longer hides it. See "New failure
-class" below.
+The discrimination *result* varies from run to run on the same
+scenario:
+
+- Run 1 — 0 discriminating cases (`insufficient_evidence`)
+- Run 2 — 4 discriminating cases (`status: ok`)
+- Run 3 — 0 discriminating cases (`insufficient_evidence`)
+
+Same hypothesis, same context, same model, same prompts. The
+non-determinism comes from how Haiku interprets the rubric build/judge
+prompts each time. See "New failure class" below — this is the
+headline finding.
 
 ## Calls per phase (core backend)
 
@@ -94,26 +105,39 @@ note about delegating shape inference to the LLM held up: with no
 input-template scaffolding, Haiku consistently produced the right
 shape from the hypothesis text alone.
 
-## Discrimination outcome
+## Discrimination outcome (run-by-run)
 
-- Status: `insufficient_evidence`
-- Reason: *"Found only 0 discriminating inputs after trying 18
-  candidates. Hypothesis may be wrong or alternative may not improve."*
-- Candidates tried: 18
-- Discriminating found: 0
+| Run | Status | Discriminating | Reason |
+|---|---|---|---|
+| 1 | `insufficient_evidence` | 0 / 18 | rubric inverted |
+| 2 | `ok` | 4 / 18 | rubric correctly oriented |
+| 3 | `insufficient_evidence` | 0 / 18 | rubric inverted |
 
-Every alt-runner output was `negative` (the alt is doing its job —
-detecting sarcasm and labelling correctly). Every current-runner output
-was `positive` (also as designed — the deliberately broken classifier).
-The hypothesis is true, the alternative is better, and yet zero
-discriminations were flagged. That is the new finding.
+In all runs every alt-runner output was `negative` (alt classifier
+doing its job) and every current-runner output was `positive` (broken
+classifier as designed). The hypothesis is true, the alternative is
+better, and the algorithm sometimes finds the cases and sometimes
+doesn't.
 
-## New failure class — rubric semantic inversion
+Run 2 produced cases like:
 
-The rubric Claude generates from `build_rubric_prompt` semantically
-inverts what the discrimination loop expects.
+> input: *"Oh great, another mandatory training session on workplace
+> safety. Just what I needed today."*
+>
+> current_output: `{"sentiment": "positive"}` →
+> verdict.passed = false ("incorrectly labeled sarcastic text...")
+>
+> alternative_output: `{"sentiment": "negative"}` →
+> verdict.passed = true ("correctly predicted negative sentiment...")
 
-`discrimination.py` uses:
+That is exactly the discrimination shape the algorithm is meant to
+produce. So the wiring is correct end-to-end. The instability lives in
+the rubric semantics.
+
+## New failure class — rubric semantic inversion (stochastic)
+
+The rubric Claude generates from `build_rubric_prompt` is sometimes
+oriented one way, sometimes the other. `discrimination.py` uses:
 
 ```python
 if not current_verdict.passed and alt_verdict.passed:
@@ -124,53 +148,63 @@ This is consistent with `pairwise_judge_prompt`'s explicit doc-string —
 *"decide whether it passes (does NOT exhibit the failure)"* — i.e.
 **`passed=true` means "system handles the case correctly"**.
 
-But `build_rubric_prompt` and `rubric_judge_prompt` do not pin the
-semantic. They say "An output passes only if it satisfies all criteria"
-without specifying what the criteria should encode. Real Haiku
-interpreted "satisfies the criteria of the failure hypothesis" as
-**"exhibits the failure pattern"**. Sample rubric-judge reasons from
-this run, verbatim:
+But `build_rubric_prompt` and `rubric_judge_prompt` do not pin that
+semantic. They say "An output passes only if it satisfies all
+criteria" without specifying what the criteria should encode. Real
+Haiku resolves the ambiguity differently across runs:
 
-- *"The classifier output is 'negative', but the rubric requires the
-  classifier to misclassify sarcastic text as positive."* (alt → false)
-- *"The classifier correctly identified the sentiment as negative, but
-  the rubric requires the classifier to misclassify..."* (alt → false)
-- *"The input contains unambiguous sarcasm... [the system]
-  misclassified..."* — passed=true (current → true)
+- *Inverted run* — sample reasons:
+  - *"The classifier output is 'negative', but the rubric requires
+    the classifier to misclassify sarcastic text as positive."*
+    (alt → false)
+  - *"The classifier correctly identified the sentiment as negative,
+    but the rubric requires the classifier to misclassify..."*
+    (alt → false)
 
-So in this run:
+  In this orientation, `passed=true` means "exhibits the failure".
+  Current always-positive on sarcastic input → passed=true; alt
+  always-negative on sarcastic input → passed=false. The discrimination
+  predicate `not current.passed AND alt.passed` is `not true AND false`
+  = `false` for every candidate.
 
-- current (always positive on sarcastic input) → passed=`true`
-- alt (negative on sarcastic input)            → passed=`false`
+- *Correct run* — sample reasons:
+  - *"The classifier incorrectly labeled sarcastic text with clearly
+    negative intent... as positive, failing to detect the sarcasm."*
+    (current → false)
+  - *"The classifier correctly predicted negative sentiment despite
+    the sarcastic positive surface language..."* (alt → true)
 
-Discrimination predicate `not current.passed AND alt.passed`
-= `not true AND false`
-= `false` — for every candidate.
+  In this orientation, `passed=true` means "handles correctly". The
+  predicate fires as designed and the algorithm produces 4 cases.
 
-Net effect: a *correctly working* alternative against a *demonstrably
-broken* current produces **zero** discriminating cases. This is a
-silent algorithmic failure — the parse-class fix removed the previous
-loud failure and let this quieter one surface.
+The rubric prompt does not constrain orientation, so Haiku coin-flips.
+This is silent — the rubric_judge response is well-formed JSON, the
+reason text is coherent, no parse failure, no exception. The only
+observable signal is the discrimination outcome flipping between runs.
 
 ## Implications for Feature 03 (prioritised)
 
-1. **Fix rubric semantic inversion (highest priority).** Either:
-   (a) tighten `build_rubric_prompt` to explicitly encode "passes iff
-   handles correctly", with the failure pattern stated in the
-   negative; or (b) flip the discrimination predicate to match the
-   "passed iff exhibits failure" semantics; or (c) move to pairwise
-   judging (already correctly oriented per `pairwise_judge_prompt`)
-   and retire the current rubric path. (a) is the smallest change.
-   (c) is the cleanest. Either way, this is a Feature 01 / Feature 03
-   prompt-design issue, not a Feature 02 issue, and is intentionally
-   not patched in this session.
+1. **Pin rubric semantic orientation (highest priority).** The rubric
+   prompts do not constrain whether `passed=true` means "handles
+   correctly" or "exhibits failure". Either:
+   (a) tighten `build_rubric_prompt` to explicitly state the
+   convention — *"a system passes when its output does NOT exhibit
+   the hypothesised failure"* — and embed that convention into the
+   rubric body; or
+   (b) move to pairwise judging (already correctly oriented per
+   `pairwise_judge_prompt`) and retire the rubric path for
+   discrimination, keeping rubric judging only for absolute scoring.
+   (a) is the smaller change. (b) is the cleaner.
+   This is a Feature 01 / Feature 03 prompt-design issue, not a
+   Feature 02 issue, and is intentionally not patched in this session.
 
-2. **Add a rubric-orientation regression test.** Write a unit test
-   that, given a fixture rubric and a clearly-correct vs.
-   clearly-broken pair, asserts the discrimination predicate flags
-   the broken side. The test should fail on this run's behaviour and
-   pass after the fix. Use `MockBackend` so it lives in the offline
-   suite.
+2. **Add a rubric-orientation regression test.** A live test that
+   runs the pipeline at fixed seed (or, given LLM non-determinism, a
+   small set of repetitions) and asserts ≥ 1 discrimination on the
+   sarcasm scenario would flag a regression in either direction.
+   Offline: a unit test where the rubric_judge LLM is mocked with a
+   "handles correctly" payload, asserting the discrimination
+   predicate fires on a current-fails / alt-passes pair.
 
 3. **`parse_json_response` is solid; consider closing the JSON-mode
    ticket.** Zero parse failures across 43 JSON-expecting calls in a
@@ -199,8 +233,8 @@ loud failure and let this quieter one surface.
 | Calls made | 1 | 44 |
 | Parse failures | 1/1 (100%) | 0/43 (0%) |
 | Phases reached | decompose only | decompose + generate + rubric_build + rubric_judge |
-| Discriminations | 0 (parse-class halt) | 0 (semantic inversion) |
-| Approx cost | ~$0.001 | ~$0.04 |
+| Discriminations | 0 (parse-class halt) | 0 / 4 / 0 across 3 runs (rubric stochastic) |
+| Approx cost | ~$0.001 | ~$0.04 per run, ~$0.12 across 3 runs |
 
 The headline change: **the parse class of bug is gone, and the
 algorithmic class of bug is now visible**. This is the right kind of
@@ -208,34 +242,39 @@ progress — fixing one layer exposes the next.
 
 ## Surprises
 
-1. **Zero parse failures, including across 36 distinct rubric_judge
-   calls.** I expected at least a few transient framing oddities;
-   none materialised. The fence-stripping and brace-slicing handled
+1. **Zero parse failures, including across 36+ distinct rubric_judge
+   calls per run.** The fence-stripping and brace-slicing handled
    everything Haiku produced this session.
 
-2. **Decompose gave 6 dimensions on a hypothesis the SMOKE_1 run
-   never got past.** The visible prefix in SMOKE_1 hinted the content
-   would be good; it is.
+2. **Decompose gave 6 dimensions consistently across runs**, on a
+   hypothesis the SMOKE_1 run never got past.
 
 3. **Generate produced 18 candidates with a single canonical input
-   shape.** I had braced for shape drift across dimensions; Haiku
-   was uniform.
+   shape (`{"text": ...}`) on every run.** I had braced for shape
+   drift across dimensions; Haiku was uniform.
 
-4. **The rubric inversion is a quiet bug.** Both `current` and `alt`
-   judge cleanly with `passed: bool` and a coherent reason — there is
-   no parse failure, no exception, no log noise. The only signal is
-   that `discriminating_found = 0`. A more ambiguous scenario could
-   easily mask this entirely.
+4. **The rubric inversion is a *stochastic* quiet bug.** I expected
+   the inversion to be either deterministic ("the prompt is
+   structurally backwards") or absent ("a one-off"). Three runs at
+   2-of-3 inverted is a third possibility I did not anticipate, and
+   the worst kind: the algorithm sometimes works, which is enough to
+   suppress alarms but not enough to ship.
 
-5. **The alt-runner worked perfectly.** Every sarcastic-positive input
-   was correctly labelled `negative`. The alt is not the bottleneck;
-   the rubric is.
+5. **The alt-runner worked perfectly across every run.** Every
+   sarcastic-positive input was correctly labelled `negative`. The
+   alt is not the bottleneck; the rubric is.
+
+6. **Run 2 (the working run) found 4 discriminating cases in 44
+   calls.** When the rubric is correctly oriented, the algorithm is
+   surprisingly efficient — well under the budget cap and well under
+   the target_n=5 even at min_required=3. This is encouraging for
+   the cost-per-hypothesis claim once the rubric is pinned.
 
 ## Confidence
 
-n=1 still — one full pipeline run on one scenario. The rubric inversion
-finding is the kind of bug that should reproduce reliably across runs
-(it is structural in the prompt, not stochastic). But before declaring
-the fix-shape settled, Feature 03 should reproduce SMOKE_2 behaviour on
-at least one non-classifier scenario (RAG QA or summarisation) to
-verify the inversion isn't peculiar to the sentiment domain.
+n=3 on this scenario, all on Haiku 4.5. The stochastic-rubric finding
+should reproduce on different scenarios but the *rate* of inversion
+will vary. Feature 03 should run the smoke against at least one
+non-classifier scenario (RAG QA or summarisation) before declaring
+the fix-shape settled, and ideally against Sonnet/Opus too — the
+prompt-following gradient there may already pin the orientation.

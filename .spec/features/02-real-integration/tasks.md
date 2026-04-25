@@ -224,7 +224,7 @@
 
 ## Task 2.10: Feature 02 review pass
 
-- Status: pending
+- Status: done
 - Depends: 2.1–2.9
 - Files: none (review only; appends `DECISIONS.md`, updates task
   statuses).

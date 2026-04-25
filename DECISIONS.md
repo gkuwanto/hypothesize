@@ -17,6 +17,85 @@ future sessions should know about.
 
 ## Entries
 
+## 2026-04-24 — Feature 02 complete
+
+- Decision: Feature 02 (real LLM integration + adapters) shipped end to end.
+- Coverage: 93% project-wide, 90%+ on every Feature 02 module
+  (`src/hypothesize/llm/`, `src/hypothesize/adapters/`, and all
+  Feature 02 additions to `src/hypothesize/core/`). Above the 80% floor.
+- Test counts: 237 non-live tests, ~0.95s on 4 workers; 4 live tests
+  (`pytest -m live`), ~44s end-to-end against Haiku 4.5.
+- Smoke result: pipeline runs end to end with zero parse failures.
+  See "Open question" below — the discrimination outcome itself is
+  stochastic across runs because of an unrelated rubric issue that
+  belongs to Feature 03.
+- Confirmed: `parse_json_response` lives in `core/json_extract.py` per
+  the design's Option-2 placement decision — none of the four parse
+  sites needed signature changes, and the helper is import-free of any
+  adapter / llm code. `AnthropicBackend` continues not to mutate
+  `Budget`; charging stays the core caller's responsibility.
+
+### Deviations from `design.md` / `tasks.md`
+
+- Live tests live in `tests/_live/` (leading underscore) rather than
+  `tests/live/` as written in `tasks.md`. The session-B instructions
+  explicitly call for `_live`; the underscore matches the existing
+  `tests/_fixtures/` convention (private, not a discoverable test
+  package). `python_files = ["test_*.py"]` still picks up tests
+  inside it. No functional impact.
+- A `pytest_collection_modifyitems` hook was added in
+  `tests/conftest.py` to default-skip `live` tests unless `-m live` is
+  set. The acceptance criterion ("`pytest tests/` does not execute
+  these") required it; without the hook, pytest's marker machinery
+  collects marked tests by default.
+- Live tests carry per-test `@pytest.mark.timeout(120-180)` overrides.
+  The project's global `--timeout=30` is too tight for any multi-call
+  pipeline run against Haiku.
+
+### Open question raised by SMOKE_2 — rubric semantic stochasticity
+
+Three smoke runs on the same scenario produced 0, 4, 0 discriminating
+cases respectively. Wiring is correct; the variance comes from
+ambiguity in `build_rubric_prompt` / `rubric_judge_prompt`: neither
+prompt pins whether `passed=true` means "system handles correctly" or
+"system exhibits the failure". Haiku resolves the ambiguity
+differently across runs. `pairwise_judge_prompt` is correctly oriented
+already — its system text says explicitly "passes (does NOT exhibit
+the failure)". `discrimination.py` assumes the pairwise convention.
+
+This is a Feature 01 / Feature 03 prompt-design issue, not a Feature
+02 issue. Per session-B scope rules, core was not modified to fix it.
+Feature 03 should:
+
+1. Tighten `build_rubric_prompt` to encode the convention explicitly,
+   or move discrimination to pairwise judging entirely.
+2. Add a regression test (offline, mocked rubric_judge) that pins the
+   discrimination predicate's expected orientation.
+3. Run the smoke against a non-classifier scenario to verify the
+   stochasticity isn't peculiar to sentiment.
+
+Full evidence: `scripts/SMOKE_FINDINGS_2.md`.
+
+### Surprises
+
+- `parse_json_response` handled 100% of fenced and prose-prefixed
+  responses across ~125 LLM calls in the live test suite plus three
+  smoke runs. The defence-in-depth case for Anthropic's structured-
+  output / tool-use JSON mode is now weaker; park that work unless a
+  later run produces a contrary signal.
+- The auto-alternative generator's prompt-rewrite call is the most
+  consequential prompt in the project, but it is small in this
+  feature's footprint — one builder, one utility, one error type.
+  Most of the session's value came from end-to-end exercise, not
+  net-new code.
+- The rubric finding is silent. The rubric_judge response is well-
+  formed JSON with coherent `reason` text, no exception path is hit,
+  no parse failure, and `discriminating_found = 0` is the only
+  signal. A more ambiguous scenario could mask this entirely. Feature
+  03 should treat "produces something but produces zero
+  discriminations" as a first-class failure category in its review
+  pass.
+
 ## 2026-04-22 — Smoke test findings (pre-Feature 02)
 
 - Haiku returns JSON wrapped in markdown code fences despite prompt instructions.
