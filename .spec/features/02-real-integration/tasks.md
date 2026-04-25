@@ -2,7 +2,7 @@
 
 ## Task 2.1: JSON extractor utility
 
-- Status: pending
+- Status: done
 - Depends: none
 - Files: `src/hypothesize/core/json_extract.py`,
   `tests/core/test_json_extract.py`,
@@ -55,7 +55,7 @@
 
 ## Task 2.2: Apply JSON extractor at four parse sites in core
 
-- Status: pending
+- Status: done
 - Depends: 2.1
 - Files: `src/hypothesize/core/decompose.py`,
   `src/hypothesize/core/generate.py`,
@@ -74,7 +74,7 @@
 
 ## Task 2.3: AnthropicConfig and AnthropicBackend
 
-- Status: pending
+- Status: done
 - Depends: none (can run in parallel with 2.1/2.2)
 - Files: `src/hypothesize/llm/__init__.py`,
   `src/hypothesize/llm/config.py`,
@@ -104,7 +104,7 @@
 
 ## Task 2.4: SystemAdapter protocol and config loader
 
-- Status: pending
+- Status: done
 - Depends: none
 - Files: `src/hypothesize/adapters/__init__.py`,
   `src/hypothesize/adapters/base.py`,
@@ -123,7 +123,7 @@
 
 ## Task 2.5: Python module adapter
 
-- Status: pending
+- Status: done
 - Depends: 2.4
 - Files: `src/hypothesize/adapters/python_module.py`,
   `tests/adapters/test_python_module.py`,
@@ -148,7 +148,7 @@
 
 ## Task 2.6: HTTP and CLI adapter stubs
 
-- Status: pending
+- Status: done
 - Depends: 2.4
 - Files: `src/hypothesize/adapters/http.py`,
   `src/hypothesize/adapters/cli.py`,

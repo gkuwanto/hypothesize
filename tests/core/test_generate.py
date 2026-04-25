@@ -134,6 +134,19 @@ async def test_drops_items_with_empty_rationale(
     assert len(cands) == 2
 
 
+async def test_fenced_json_response_parses_like_clean(
+    hypothesis: Hypothesis, dimension: ProbingDimension
+) -> None:
+    """Regression: fenced JSON from the LLM must parse identically."""
+    clean = _candidates_payload(_make_items(3))
+    fenced = f"```json\n{clean}\n```"
+    backend = MockBackend(responses=[fenced])
+    budget = Budget(max_llm_calls=10)
+    cands = await generate_candidates(hypothesis, dimension, [], 3, backend, budget)
+    assert len(cands) == 3
+    assert all(isinstance(c, CandidateInput) for c in cands)
+
+
 async def test_every_candidate_tagged_with_dimension_name(
     hypothesis: Hypothesis, dimension: ProbingDimension
 ) -> None:

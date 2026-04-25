@@ -115,6 +115,19 @@ async def test_empty_context_still_sends_request(hypothesis: Hypothesis) -> None
     assert len(backend.calls) == 1
 
 
+async def test_fenced_json_response_parses_like_clean(
+    hypothesis: Hypothesis,
+) -> None:
+    """Regression: Haiku-style fenced JSON must parse identically."""
+    clean = _dims_payload(_make_dims(4))
+    fenced = f"```json\n{clean}\n```"
+    backend = MockBackend(responses=[fenced])
+    budget = Budget(max_llm_calls=5)
+    dims = await decompose_hypothesis(hypothesis, [], backend, budget)
+    assert len(dims) == 4
+    assert all(isinstance(d, ProbingDimension) for d in dims)
+
+
 async def test_context_included_in_prompt(hypothesis: Hypothesis) -> None:
     backend = MockBackend(responses=[_dims_payload(_make_dims(3))])
     budget = Budget(max_llm_calls=5)
