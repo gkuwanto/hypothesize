@@ -1,10 +1,25 @@
-# HotpotQA multi-hop QA — scaffold config.
+# HotpotQA closed-book multi-hop QA — filter-pass example.
 #
-# This example is NOT yet runnable. See examples/hotpotqa/README.md for
-# the manual setup steps (HotpotQA download, runner body fill-in).
+# This example operates differently from examples/sarcasm: it filters
+# an existing eval dataset rather than generating candidates from a
+# hypothesis. The discrimination algorithm (decompose → generate →
+# judge) does not fit cleanly here because (a) we use ExactMatchJudge
+# against gold answers, not RubricJudge, and (b) candidates are
+# pre-supplied (HotpotQA validation items), not LLM-generated.
 #
-# Once the system.py runner is implemented, run with:
-#   hypothesize run --config examples/hotpotqa/config.yaml
+# The filter pass therefore runs via:
+#
+#   python examples/hotpotqa/run_filter.py
+#
+# This config is preserved as documentation of the system shape (so
+# `hypothesize list .` and `discover_systems` surface it) and to share
+# the LLM/budget settings with the script. The script loads this YAML
+# via `load_run_config` and uses `current.module_path`,
+# `alternative.module_path`, `llm.default_model`, and `budget`.
+#
+# Note: AlternativeConfig has no `prompt_override` field. The script
+# explicitly invokes the alternative runner with DECOMPOSE_PROMPT
+# imported from system.py — see examples/hotpotqa/run_filter.py.
 
 name: hotpotqa-multihop
 
@@ -13,14 +28,16 @@ current:
   module_path: examples/hotpotqa/system.py
   entrypoint: run
 
-# `auto` triggers make_auto_alternative once the runner body is real.
 alternative:
-  adapter: auto
+  adapter: python_module
+  module_path: examples/hotpotqa/system.py
+  entrypoint: run
 
 hypothesis:
   text: >-
-    the QA system answers from a single retrieved context and ignores
-    the second hop required to compose the correct answer
+    the QA system fails on multi-hop questions requiring chained
+    reasoning across two entities, where the intermediate entity is
+    not named in the question
   context_refs: []
 
 llm:
@@ -28,8 +45,8 @@ llm:
   max_tokens: 2048
 
 budget:
-  max_llm_calls: 100
+  max_llm_calls: 200
 
 defaults:
-  target_n: 5
-  min_required: 3
+  target_n: 10
+  min_required: 1
