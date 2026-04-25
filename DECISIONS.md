@@ -199,3 +199,31 @@ Full evidence: `scripts/SMOKE_FINDINGS_2.md`.
   `src/hypothesize/core/prompts.py` and add the offline regression
   test for the discrimination-predicate orientation. Not done in this
   session.
+
+## 2026-04-24 — Rubric orientation fix complete
+
+- Tightened `build_rubric_prompt` and `rubric_judge_prompt` per Path A
+  (`scripts/diagnostics/RUBRIC_FINDINGS.md` recommendation). The
+  convention `passed=true = handles correctly, does NOT exhibit failure`
+  is now stated explicitly in both the builder and judge system
+  messages, and the builder is additionally required to write criteria
+  as success-descriptors rather than failure-descriptors.
+- Added offline regression test
+  (`tests/core/test_rubric_orientation_regression.py`, 4 cases) that
+  pins the discrimination predicate against a fixed-orientation
+  `MockBackend` contract. Guards against future re-inversion in either
+  the prompts, the judge, or the discrimination predicate itself.
+- Refactored `scripts/smoke_test.py` into a `Scenario` dataclass and
+  added a non-classifier scenario (summarization: named-entity
+  preservation) alongside the existing sarcasm scenario. Each scenario
+  runs with its own 100-call core budget.
+- Verified end-to-end with SMOKE_3 across two back-to-back sessions and
+  two scenarios each. All four scenario-runs returned `status=ok` with
+  5/5 discriminating cases, zero parse failures, and zero inverted
+  verdicts across 168 `rubric_judge` calls and 4 rubric builds.
+  Orientation: **correct**.
+- Total cost incurred this session: ~$0.26 in live API spend (in
+  addition to the diagnostic's ~$1.50). Cumulative bug investigation +
+  fix cost ≈ $1.80.
+- See `scripts/SMOKE_FINDINGS_3.md` for detailed per-run verification,
+  per-phase token accounting, and quoted verdict reasons.

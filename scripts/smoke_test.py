@@ -4,13 +4,22 @@
 This is a one-off diagnostic, not product code and not part of the pytest
 suite. It exists to surface the gap between MockBackend (which always
 returns well-formed scripted JSON) and real Claude (which may or may not).
-Findings are written to scripts/SMOKE_FINDINGS_2.md and inform Feature
-03's design.
+Findings are written to scripts/SMOKE_FINDINGS_{1,2,3}.md and inform
+later-feature design.
 
-Scenario: a deliberately broken sentiment classifier that always predicts
-"positive", pitted against a sarcasm-aware classifier built on Claude
-Haiku. The discrimination algorithm should find sarcastic-positive inputs
-where the dumb classifier fails and the alternative succeeds.
+Two scenarios are exercised back-to-back, each with its own 100-call
+core-backend budget:
+
+1. ``SARCASM_SCENARIO`` — a deliberately broken sentiment classifier that
+   always predicts "positive", pitted against a sarcasm-aware alternative
+   built on Claude Haiku. This is the SMOKE_1 / SMOKE_2 scenario —
+   reproduces the same conditions under which the original rubric
+   orientation bug surfaced.
+2. ``SUMMARIZATION_SCENARIO`` — a toy non-classifier scenario. Current
+   runner asks Haiku for a terse summary; alternative asks Haiku for a
+   summary that preserves named entities. Tests whether the discrimination
+   algorithm — and in particular the tightened rubric prompts — still
+   behave sensibly on a generative (non-boolean-output) task.
 
 Run from repo root (with ``.env`` populated)::
 
@@ -27,6 +36,7 @@ import json
 import os
 import sys
 import time
+from dataclasses import dataclass, field
 from typing import Any
 
 from dotenv import load_dotenv
@@ -47,6 +57,11 @@ BUDGET_CAP = 100
 TARGET_N = 5
 MIN_REQUIRED = 3
 MAX_TOKENS = 2048
+
+
+# --------------------------------------------------------------------
+# Shared utilities
+# --------------------------------------------------------------------
 
 
 def classify_phase(messages: list[dict]) -> str:
@@ -99,12 +114,42 @@ class RecordingBackend:
         return text
 
 
-async def current_runner(input_data: dict[str, Any]) -> dict[str, Any]:
+# --------------------------------------------------------------------
+# Scenario shape
+# --------------------------------------------------------------------
+
+
+SystemRunner = Any  # async callable: dict -> dict
+
+
+@dataclass
+class Scenario:
+    name: str
+    hypothesis: Hypothesis
+    context: list[str]
+    # Factory is (alt_backend_for_live_systems) -> (current_runner, alt_runner)
+    build_runners: Any  # callable
+    notes: str = ""
+    # On-scenario output accumulators populated during run()
+    core_logs: list[RunnerCallLog] = field(default_factory=list)
+    core_backend: RecordingBackend | None = None
+    alt_backend: RecordingBackend | None = None
+    budget: Budget | None = None
+    result: Any = None
+    elapsed: float = 0.0
+
+
+# --------------------------------------------------------------------
+# Scenario 1: sarcasm classifier (reused from SMOKE_2)
+# --------------------------------------------------------------------
+
+
+async def _sarcasm_current_runner(input_data: dict[str, Any]) -> dict[str, Any]:
     """Deliberately dumb classifier: always 'positive'."""
     return {"sentiment": "positive"}
 
 
-class SarcasmAwareRunner:
+class _SarcasmAwareRunner:
     """Alternative runner: asks Haiku to classify, explicitly flagging sarcasm.
 
     Uses a separate backend instance so its calls don't mix with the core
@@ -151,6 +196,155 @@ class SarcasmAwareRunner:
         return {"sentiment": "positive"}
 
 
+def _build_sarcasm_runners(
+    alt_backend: RecordingBackend,
+) -> tuple[Any, Any]:
+    return _sarcasm_current_runner, _SarcasmAwareRunner(alt_backend)
+
+
+SARCASM_SCENARIO = Scenario(
+    name="sarcasm classifier",
+    hypothesis=Hypothesis(
+        text=(
+            "the sentiment classifier fails on sarcastic positive text "
+            "(surface tokens positive, intent negative)"
+        )
+    ),
+    context=[
+        "The current system is a naive sentiment classifier that always "
+        "predicts 'positive' for any input.",
+        "The alternative system is expected to detect sarcastic statements "
+        "whose surface tokens read positive but whose intent is negative.",
+    ],
+    build_runners=_build_sarcasm_runners,
+    notes=(
+        "Classifier scenario. Boolean-ish output shape ({'sentiment': str}); "
+        "reproduces the SMOKE_2 conditions under which the rubric "
+        "orientation bug originally surfaced."
+    ),
+)
+
+
+# --------------------------------------------------------------------
+# Scenario 2: summarization — non-classifier shape
+# --------------------------------------------------------------------
+
+
+class _TerseSummaryRunner:
+    """Current runner: terse one-sentence summary, no special entity care."""
+
+    def __init__(self, backend: RecordingBackend) -> None:
+        self.backend = backend
+
+    async def __call__(self, input_data: dict[str, Any]) -> dict[str, Any]:
+        document = ""
+        for key in ("document", "text", "input", "content"):
+            if isinstance(input_data.get(key), str) and input_data[key]:
+                document = input_data[key]
+                break
+        if not document:
+            document = json.dumps(input_data)
+
+        prompt = [
+            {
+                "role": "system",
+                "content": (
+                    "You summarize short documents. Produce exactly one "
+                    "concise sentence. No more. No less."
+                ),
+            },
+            {"role": "user", "content": f"Document:\n{document}\n\nSummary:"},
+        ]
+        try:
+            raw = await self.backend.complete(prompt)
+        except Exception as e:
+            print(
+                f"[summ_current] giving up on input: {e!r}", file=sys.stderr
+            )
+            return {"summary": ""}
+        return {"summary": raw.strip()}
+
+
+class _EntityPreservingSummaryRunner:
+    """Alternative runner: summary explicitly preserving named entities."""
+
+    def __init__(self, backend: RecordingBackend) -> None:
+        self.backend = backend
+
+    async def __call__(self, input_data: dict[str, Any]) -> dict[str, Any]:
+        document = ""
+        for key in ("document", "text", "input", "content"):
+            if isinstance(input_data.get(key), str) and input_data[key]:
+                document = input_data[key]
+                break
+        if not document:
+            document = json.dumps(input_data)
+
+        prompt = [
+            {
+                "role": "system",
+                "content": (
+                    "You summarize short documents in exactly one sentence. "
+                    "You MUST preserve all named entities — people, places, "
+                    "organizations, and product names — that appear in the "
+                    "document. If the document names a person, include that "
+                    "name. If it names a city, include the city. If a "
+                    "company or product appears, include it verbatim."
+                ),
+            },
+            {"role": "user", "content": f"Document:\n{document}\n\nSummary:"},
+        ]
+        try:
+            raw = await self.backend.complete(prompt)
+        except Exception as e:
+            print(
+                f"[summ_alt] giving up on input: {e!r}", file=sys.stderr
+            )
+            return {"summary": ""}
+        return {"summary": raw.strip()}
+
+
+def _build_summarization_runners(
+    alt_backend: RecordingBackend,
+) -> tuple[Any, Any]:
+    return (
+        _TerseSummaryRunner(alt_backend),
+        _EntityPreservingSummaryRunner(alt_backend),
+    )
+
+
+SUMMARIZATION_SCENARIO = Scenario(
+    name="summarization: entity preservation",
+    hypothesis=Hypothesis(
+        text=(
+            "the summarizer fails to preserve named entities — people, "
+            "places, organizations — mentioned in the source document, "
+            "dropping them in favor of generic nouns"
+        )
+    ),
+    context=[
+        "The current system is a terse one-sentence summarizer with no "
+        "explicit instruction to preserve named entities; it often "
+        "paraphrases 'Dr. Sato at Tokyo University' as 'a researcher'.",
+        "The alternative system is explicitly instructed to preserve all "
+        "named entities — people, places, organizations, and products — "
+        "verbatim in its one-sentence summary.",
+    ],
+    build_runners=_build_summarization_runners,
+    notes=(
+        "Non-classifier scenario. Free-text output shape "
+        "({'summary': str}); exercises the discrimination pipeline on a "
+        "generative task where the rubric must reason about what the "
+        "summary contains rather than comparing a fixed label."
+    ),
+)
+
+
+# --------------------------------------------------------------------
+# Reporting
+# --------------------------------------------------------------------
+
+
 def _section(title: str) -> None:
     print()
     print("=" * 72)
@@ -158,15 +352,27 @@ def _section(title: str) -> None:
     print("=" * 72)
 
 
-def report(
-    core: RecordingBackend,
-    alt: RecordingBackend,
-    core_logs: list[RunnerCallLog],
-    result: Any,
-    budget: Budget,
-    elapsed: float,
-) -> None:
-    _section("RESULT SUMMARY")
+def _h1(title: str) -> None:
+    print()
+    print("#" * 72)
+    print(f"# {title}")
+    print("#" * 72)
+
+
+def report(scenario: Scenario) -> None:
+    assert scenario.core_backend is not None
+    assert scenario.alt_backend is not None
+    assert scenario.budget is not None
+    assert scenario.result is not None
+
+    core = scenario.core_backend
+    alt = scenario.alt_backend
+    budget = scenario.budget
+    result = scenario.result
+    core_logs = scenario.core_logs
+    elapsed = scenario.elapsed
+
+    _section(f"RESULT SUMMARY — {scenario.name}")
     print(f"Status:        {result.status}")
     print(f"Budget used:   {result.budget_used}/{budget.max_llm_calls}")
     print(f"Wall time:     {elapsed:.1f}s")
@@ -194,10 +400,6 @@ def report(
 
     _section("TOKEN USAGE PER PHASE")
     if core_logs:
-        # Pair logs with phases by index — RecordingBackend records a
-        # call_log entry per ``inner.complete`` call, and the inner
-        # backend's ``on_call`` fires once per successful response, so
-        # entries align by sequence.
         by_phase: dict[str, list[RunnerCallLog]] = {}
         for entry, log in zip(core.call_log, core_logs, strict=False):
             by_phase.setdefault(entry["phase"], []).append(log)
@@ -277,6 +479,34 @@ def report(
         for keys, count in sorted(distinct.items(), key=lambda kv: -kv[1]):
             print(f"  keys={list(keys)!r} × {count}")
 
+    _section("RUBRIC BUILD OUTPUT")
+    for call in core.call_log:
+        if call["phase"] != "rubric_build":
+            continue
+        resp = call.get("response") or ""
+        first_lines = resp.strip().splitlines()[:8]
+        print("  First lines of rubric:")
+        for line in first_lines:
+            print(f"    {line}")
+        break
+
+    _section("SAMPLE rubric_judge VERDICT REASONS")
+    verdicts_shown = 0
+    for call in core.call_log:
+        if call["phase"] != "rubric_judge":
+            continue
+        parsed = parse_json_response(call.get("response", ""))
+        if isinstance(parsed, dict):
+            print(
+                f"  passed={parsed.get('passed')!r:<6} "
+                f"reason={str(parsed.get('reason', ''))[:160]}"
+            )
+            verdicts_shown += 1
+        if verdicts_shown >= 6:
+            break
+    if verdicts_shown == 0:
+        print("  (no rubric_judge calls — scenario did not reach that phase)")
+
     _section("DISCRIMINATION OUTCOME")
     if result.status == "ok":
         print(f"  discriminating cases: {len(result.test_cases)}")
@@ -294,6 +524,62 @@ def report(
         print(f"  discriminating_found: {result.insufficient.discriminating_found}")
 
 
+async def run_scenario(scenario: Scenario) -> None:
+    _h1(f"SCENARIO: {scenario.name}")
+    print(f"Notes:        {scenario.notes}")
+    print(f"Hypothesis:   {scenario.hypothesis.text}")
+    print(f"Model:        {MODEL}")
+    print(f"Budget cap:   {BUDGET_CAP} core LLM calls")
+    print(f"Target N:     {TARGET_N}")
+    print(f"Min required: {MIN_REQUIRED}")
+
+    config = AnthropicConfig(default_model=MODEL, max_tokens=MAX_TOKENS)
+    core_logs: list[RunnerCallLog] = []
+    inner_core = AnthropicBackend(config=config, on_call=core_logs.append)
+    inner_alt = AnthropicBackend(config=config)
+    core_backend = RecordingBackend("core", inner_core)
+    alt_backend = RecordingBackend("alt", inner_alt)
+
+    current_runner, alt_runner = scenario.build_runners(alt_backend)
+
+    budget = Budget(max_llm_calls=BUDGET_CAP)
+    judge = RubricJudge(llm=core_backend)
+
+    start = time.monotonic()
+    try:
+        result = await find_discriminating_inputs(
+            hypothesis=scenario.hypothesis,
+            current_runner=current_runner,
+            alternative_runner=alt_runner,
+            context=scenario.context,
+            judge=judge,
+            llm=core_backend,
+            budget=budget,
+            target_n=TARGET_N,
+            min_required=MIN_REQUIRED,
+        )
+    except (AutoAlternativeUnavailable, BudgetExhausted):
+        raise
+    except Exception as e:
+        elapsed = time.monotonic() - start
+        print(
+            f"\nUnhandled exception after {elapsed:.1f}s: "
+            f"{type(e).__name__}: {e!r}",
+            file=sys.stderr,
+        )
+        raise
+    elapsed = time.monotonic() - start
+
+    scenario.core_backend = core_backend
+    scenario.alt_backend = alt_backend
+    scenario.core_logs = core_logs
+    scenario.budget = budget
+    scenario.result = result
+    scenario.elapsed = elapsed
+
+    report(scenario)
+
+
 async def main() -> int:
     load_dotenv()
 
@@ -306,70 +592,45 @@ async def main() -> int:
         )
         return 1
 
-    start = time.monotonic()
-
-    config = AnthropicConfig(default_model=MODEL, max_tokens=MAX_TOKENS)
-    core_logs: list[RunnerCallLog] = []
-    inner_core = AnthropicBackend(config=config, on_call=core_logs.append)
-    inner_alt = AnthropicBackend(config=config)
-    core_backend = RecordingBackend("core", inner_core)
-    alt_backend = RecordingBackend("alt", inner_alt)
-
-    hypothesis = Hypothesis(
-        text=(
-            "the sentiment classifier fails on sarcastic positive text "
-            "(surface tokens positive, intent negative)"
-        )
-    )
-    context = [
-        "The current system is a naive sentiment classifier that always "
-        "predicts 'positive' for any input.",
-        "The alternative system is expected to detect sarcastic statements "
-        "whose surface tokens read positive but whose intent is negative.",
-    ]
-    budget = Budget(max_llm_calls=BUDGET_CAP)
-    judge = RubricJudge(llm=core_backend)
-    alt_runner = SarcasmAwareRunner(alt_backend)
-
     print("=" * 72)
-    print("HYPOTHESIZE smoke test — real Anthropic API")
+    print("HYPOTHESIZE smoke test — real Anthropic API (two scenarios)")
     print("=" * 72)
     print(f"Model:        {MODEL}")
-    print(f"Budget cap:   {BUDGET_CAP} core LLM calls")
+    print(f"Per-scenario budget cap: {BUDGET_CAP} core LLM calls")
     print(f"Target N:     {TARGET_N}")
     print(f"Min required: {MIN_REQUIRED}")
-    print(f"Hypothesis:   {hypothesis.text}")
     print()
     print("Streaming LLM call previews to stderr ...")
 
-    try:
-        result = await find_discriminating_inputs(
-            hypothesis=hypothesis,
-            current_runner=current_runner,
-            alternative_runner=alt_runner,
-            context=context,
-            judge=judge,
-            llm=core_backend,
-            budget=budget,
-            target_n=TARGET_N,
-            min_required=MIN_REQUIRED,
-        )
-    except (AutoAlternativeUnavailable, BudgetExhausted):
-        # These are pre-pipeline errors and the smoke scenario does not
-        # invoke ``make_auto_alternative``. Catching them here is purely
-        # defensive — surfacing cleanly rather than crashing.
-        raise
-    except Exception as e:
-        elapsed = time.monotonic() - start
-        print(
-            f"\nUnhandled exception after {elapsed:.1f}s: "
-            f"{type(e).__name__}: {e!r}",
-            file=sys.stderr,
-        )
-        raise
+    session_start = time.monotonic()
+    for scenario in (SARCASM_SCENARIO, SUMMARIZATION_SCENARIO):
+        await run_scenario(scenario)
 
-    elapsed = time.monotonic() - start
-    report(core_backend, alt_backend, core_logs, result, budget, elapsed)
+    session_elapsed = time.monotonic() - session_start
+
+    _h1("SESSION TOTALS")
+    total_core_calls = 0
+    total_alt_calls = 0
+    total_in = 0
+    total_out = 0
+    for scenario in (SARCASM_SCENARIO, SUMMARIZATION_SCENARIO):
+        assert scenario.core_backend is not None
+        assert scenario.alt_backend is not None
+        total_core_calls += len(scenario.core_backend.call_log)
+        total_alt_calls += len(scenario.alt_backend.call_log)
+        total_in += sum(log.input_tokens for log in scenario.core_logs)
+        total_out += sum(log.output_tokens for log in scenario.core_logs)
+        print(
+            f"  {scenario.name:40} core_calls={len(scenario.core_backend.call_log)} "
+            f"alt_calls={len(scenario.alt_backend.call_log)} "
+            f"core_in_tokens={sum(log.input_tokens for log in scenario.core_logs)} "
+            f"core_out_tokens={sum(log.output_tokens for log in scenario.core_logs)}"
+        )
+    print()
+    print(f"  TOTAL core_calls={total_core_calls} alt_calls={total_alt_calls}")
+    print(f"  TOTAL core_in_tokens={total_in} core_out_tokens={total_out}")
+    print(f"  Session wall time: {session_elapsed:.1f}s")
+
     return 0
 
 

@@ -79,16 +79,36 @@ def generate_candidates_prompt(
 
 
 def build_rubric_prompt(hypothesis: Hypothesis) -> list[dict]:
-    """Ask the LLM to produce a rubric for judging outputs against a hypothesis."""
+    """Ask the LLM to produce a rubric for judging outputs against a hypothesis.
+
+    The prompt pins a fixed orientation convention: ``passed=true`` means
+    the system handled the case correctly (did NOT exhibit the hypothesized
+    failure). Criteria are required to be success-descriptors — properties
+    of a correctly-handling output — so that "satisfies all criteria" lines
+    up with "did NOT exhibit the failure" on the downstream judge.
+    """
     system = (
         "You write concise evaluation rubrics. Given a failure hypothesis, "
         "produce a short rubric an evaluator can use to decide whether an "
-        "output passes or fails with respect to the hypothesis."
+        "output passes or fails with respect to the hypothesis.\n\n"
+        "ORIENTATION CONVENTION (must be followed): passed=true means the "
+        "system handled the case correctly — it does NOT exhibit the "
+        "hypothesized failure. passed=false means the system did exhibit "
+        "the failure. Write every rubric criterion as a success-descriptor "
+        "— a property of a correctly-handling output — so that 'satisfies "
+        "the criterion' = 'did NOT exhibit the hypothesized failure'. Do "
+        "NOT write criteria as failure-descriptors (e.g. 'output "
+        "contradicts true sentiment'); write the positive form instead "
+        "(e.g. 'output correctly identifies the sentiment despite "
+        "surface-positive tokens indicating sarcasm')."
     )
     user = (
         f"Hypothesis: {hypothesis.text}\n\n"
         "Write a rubric (3-6 bullet criteria). An output passes only if it "
-        "satisfies all criteria. Plain text, no JSON."
+        "satisfies all criteria, where 'passes' means the output does NOT "
+        "exhibit the hypothesized failure. State the convention explicitly "
+        "in the rubric header so a downstream evaluator cannot misread it. "
+        "Plain text, no JSON."
     )
     return [
         {"role": "system", "content": system},
@@ -99,11 +119,22 @@ def build_rubric_prompt(hypothesis: Hypothesis) -> list[dict]:
 def rubric_judge_prompt(
     rubric: str, input_data: dict[str, Any], output: dict[str, Any]
 ) -> list[dict]:
-    """Ask the LLM to score an output against a rubric."""
+    """Ask the LLM to score an output against a rubric.
+
+    Repeats the orientation convention as a belt-and-suspenders safeguard —
+    even if the rubric body omits the convention header, the judge itself
+    is instructed to interpret ``passed=true`` as "handles correctly, does
+    NOT exhibit the failure".
+    """
     system = (
         "You apply a rubric to an input/output pair. Return a strict JSON "
         'object: {"passed": bool, "reason": str}. "reason" is one short '
-        "sentence. No prose outside the JSON."
+        "sentence. No prose outside the JSON.\n\n"
+        "CRITICAL: passed=true means the system handled the case correctly "
+        "— it does NOT exhibit the hypothesized failure described in the "
+        "rubric. passed=false means the system DID exhibit the failure. "
+        "Apply this orientation on every judgment regardless of how the "
+        "rubric is phrased."
     )
     user = (
         f"Rubric:\n{rubric}\n\n"
