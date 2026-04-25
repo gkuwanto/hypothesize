@@ -243,7 +243,7 @@ calls in this session.
 
 ## Task 4.9: README Quickstart section
 
-- Status: pending
+- Status: done
 - Depends: 4.4
 - Files:
   - `README.md` (edit — add Quickstart section)
