@@ -1,0 +1,35 @@
+# HotpotQA multi-hop QA — scaffold config.
+#
+# This example is NOT yet runnable. See examples/hotpotqa/README.md for
+# the manual setup steps (HotpotQA download, runner body fill-in).
+#
+# Once the system.py runner is implemented, run with:
+#   hypothesize run --config examples/hotpotqa/config.yaml
+
+name: hotpotqa-multihop
+
+current:
+  adapter: python_module
+  module_path: examples/hotpotqa/system.py
+  entrypoint: run
+
+# `auto` triggers make_auto_alternative once the runner body is real.
+alternative:
+  adapter: auto
+
+hypothesis:
+  text: >-
+    the QA system answers from a single retrieved context and ignores
+    the second hop required to compose the correct answer
+  context_refs: []
+
+llm:
+  default_model: claude-haiku-4-5-20251001
+  max_tokens: 2048
+
+budget:
+  max_llm_calls: 100
+
+defaults:
+  target_n: 5
+  min_required: 3

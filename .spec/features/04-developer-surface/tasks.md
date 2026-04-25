@@ -144,7 +144,7 @@ calls in this session.
 
 ## Task 4.5: `examples/hotpotqa/` — scaffold
 
-- Status: pending
+- Status: done
 - Depends: 4.2
 - Files:
   - `examples/hotpotqa/system.py` (new — skeleton)
