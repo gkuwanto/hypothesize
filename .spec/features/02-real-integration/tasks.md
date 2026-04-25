@@ -207,7 +207,7 @@
 
 ## Task 2.9: Re-run smoke test and document findings
 
-- Status: pending
+- Status: done
 - Depends: 2.2, 2.3, 2.7
 - Files: `scripts/smoke_test.py` (minimal edit to consume
   `AnthropicBackend`), `scripts/SMOKE_FINDINGS_2.md` (new).

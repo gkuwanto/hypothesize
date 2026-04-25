@@ -4,20 +4,20 @@
 This is a one-off diagnostic, not product code and not part of the pytest
 suite. It exists to surface the gap between MockBackend (which always
 returns well-formed scripted JSON) and real Claude (which may or may not).
-Findings are written to scripts/SMOKE_FINDINGS.md and inform Feature 02's
-design.
+Findings are written to scripts/SMOKE_FINDINGS_2.md and inform Feature
+03's design.
 
 Scenario: a deliberately broken sentiment classifier that always predicts
 "positive", pitted against a sarcasm-aware classifier built on Claude
 Haiku. The discrimination algorithm should find sarcastic-positive inputs
 where the dumb classifier fails and the alternative succeeds.
 
-Run from repo root:
+Run from repo root (with ``.env`` populated)::
 
-    ANTHROPIC_API_KEY=sk-ant-... python scripts/smoke_test.py
+    python scripts/smoke_test.py
 
-Requires the core package importable (i.e. run on a branch that has
-Feature 01 merged in, or checked out).
+The API key is read from ``.env`` via ``python-dotenv`` — never from the
+shell environment. Never logged, printed, or echoed by this script.
 """
 
 from __future__ import annotations
@@ -29,88 +29,24 @@ import sys
 import time
 from typing import Any
 
-import anthropic
+from dotenv import load_dotenv
 
+from hypothesize.adapters.errors import (
+    AutoAlternativeUnavailable,
+    BudgetExhausted,
+)
 from hypothesize.core.discrimination import find_discriminating_inputs
+from hypothesize.core.json_extract import parse_json_response
 from hypothesize.core.judge import RubricJudge
 from hypothesize.core.types import Budget, Hypothesis
+from hypothesize.llm.anthropic import AnthropicBackend
+from hypothesize.llm.config import AnthropicConfig, RunnerCallLog
 
 MODEL = "claude-haiku-4-5-20251001"
-BUDGET_CAP = 30
+BUDGET_CAP = 100
 TARGET_N = 5
 MIN_REQUIRED = 3
 MAX_TOKENS = 2048
-
-
-class RealAnthropicBackend:
-    """Inline LLMBackend wrapping anthropic.AsyncAnthropic. Diagnostic only.
-
-    Every call is logged (messages + response or error). The first 200
-    characters of each response are mirrored to stderr so a human watching
-    the script run can see what Claude is actually returning. This class
-    is not the future production backend; Feature 02 will design that
-    properly.
-    """
-
-    def __init__(self, label: str, model: str = MODEL) -> None:
-        self.client = anthropic.AsyncAnthropic()
-        self.model = model
-        self.label = label
-        self.call_log: list[dict[str, Any]] = []
-
-    async def complete(self, messages: list[dict], **kwargs: Any) -> str:
-        system: str | None = None
-        api_messages: list[dict] = []
-        for m in messages:
-            if m.get("role") == "system":
-                system = m.get("content")
-            else:
-                api_messages.append({"role": m["role"], "content": m["content"]})
-
-        api_kwargs: dict[str, Any] = {
-            "model": self.model,
-            "max_tokens": MAX_TOKENS,
-            "messages": api_messages,
-        }
-        if system is not None:
-            api_kwargs["system"] = system
-
-        try:
-            resp = await self.client.messages.create(**api_kwargs)
-        except Exception as e:
-            print(
-                f"[{self.label}] API error: {type(e).__name__}: {e!r}",
-                file=sys.stderr,
-            )
-            self.call_log.append(
-                {"messages": messages, "error": f"{type(e).__name__}: {e!r}"}
-            )
-            raise
-
-        text = ""
-        try:
-            text = resp.content[0].text  # type: ignore[union-attr]
-        except (IndexError, AttributeError) as e:
-            print(
-                f"[{self.label}] Unexpected response shape: {e!r}",
-                file=sys.stderr,
-            )
-            self.call_log.append(
-                {
-                    "messages": messages,
-                    "error": f"response-shape: {e!r}",
-                    "raw_response": repr(resp),
-                }
-            )
-            return ""
-
-        self.call_log.append({"messages": messages, "response": text})
-        preview = text.replace("\n", " ")[:200]
-        print(
-            f"[{self.label}] call #{len(self.call_log)} -> {preview!r}",
-            file=sys.stderr,
-        )
-        return text
 
 
 def classify_phase(messages: list[dict]) -> str:
@@ -130,7 +66,37 @@ def classify_phase(messages: list[dict]) -> str:
         return "rubric_judge"
     if "evaluate two candidate outputs" in system:
         return "pairwise_judge"
+    if "rewrite an LLM system prompt" in system:
+        return "rewrite_prompt"
     return "unknown"
+
+
+class RecordingBackend:
+    """Wraps an ``AnthropicBackend`` to record raw response text per call.
+
+    The production backend's ``on_call`` hook surfaces token counts but
+    not response text. The smoke report needs the text to summarise
+    parse cleanliness, observed input shapes, etc. — so we wrap it.
+    """
+
+    def __init__(self, label: str, inner: AnthropicBackend) -> None:
+        self.label = label
+        self.inner = inner
+        self.call_log: list[dict[str, Any]] = []
+
+    async def complete(self, messages: list[dict], **kwargs: Any) -> str:
+        text = await self.inner.complete(messages, **kwargs)
+        phase = classify_phase(messages)
+        self.call_log.append(
+            {"phase": phase, "messages": messages, "response": text}
+        )
+        preview = text.replace("\n", " ")[:120]
+        print(
+            f"[{self.label}] call #{len(self.call_log)} phase={phase} "
+            f"-> {preview!r}",
+            file=sys.stderr,
+        )
+        return text
 
 
 async def current_runner(input_data: dict[str, Any]) -> dict[str, Any]:
@@ -146,7 +112,7 @@ class SarcasmAwareRunner:
     LLMBackend passed to find_discriminating_inputs.
     """
 
-    def __init__(self, backend: RealAnthropicBackend) -> None:
+    def __init__(self, backend: RecordingBackend) -> None:
         self.backend = backend
 
     async def __call__(self, input_data: dict[str, Any]) -> dict[str, Any]:
@@ -156,8 +122,6 @@ class SarcasmAwareRunner:
                 text = input_data[key]
                 break
         if not text:
-            # Fall back to JSON-dumping the whole input so the classifier
-            # at least has something to read.
             text = json.dumps(input_data)
 
         prompt = [
@@ -181,7 +145,6 @@ class SarcasmAwareRunner:
             return {"sentiment": "positive"}
 
         label = raw.strip().lower().split()[0] if raw.strip() else "positive"
-        # Strip trailing punctuation
         label = label.rstrip(".,!?:;")
         if label == "negative":
             return {"sentiment": "negative"}
@@ -196,8 +159,9 @@ def _section(title: str) -> None:
 
 
 def report(
-    core: RealAnthropicBackend,
-    alt: RealAnthropicBackend,
+    core: RecordingBackend,
+    alt: RecordingBackend,
+    core_logs: list[RunnerCallLog],
     result: Any,
     budget: Budget,
     elapsed: float,
@@ -207,12 +171,14 @@ def report(
     print(f"Budget used:   {result.budget_used}/{budget.max_llm_calls}")
     print(f"Wall time:     {elapsed:.1f}s")
     print(f"Core calls:    {len(core.call_log)}")
-    print(f"Alt-runner:    {len(alt.call_log)} (not counted against core budget)")
+    print(
+        f"Alt-runner:    {len(alt.call_log)} (not counted against core budget)"
+    )
 
     _section("CALLS PER PHASE (core backend)")
     phase_counts: dict[str, int] = {}
     for call in core.call_log:
-        phase = classify_phase(call["messages"])
+        phase = call["phase"]
         phase_counts[phase] = phase_counts.get(phase, 0) + 1
     for phase in (
         "decompose",
@@ -220,24 +186,47 @@ def report(
         "rubric_build",
         "rubric_judge",
         "pairwise_judge",
+        "rewrite_prompt",
         "unknown",
     ):
         if phase in phase_counts:
             print(f"  {phase:15} {phase_counts[phase]}")
 
+    _section("TOKEN USAGE PER PHASE")
+    if core_logs:
+        # Pair logs with phases by index — RecordingBackend records a
+        # call_log entry per ``inner.complete`` call, and the inner
+        # backend's ``on_call`` fires once per successful response, so
+        # entries align by sequence.
+        by_phase: dict[str, list[RunnerCallLog]] = {}
+        for entry, log in zip(core.call_log, core_logs, strict=False):
+            by_phase.setdefault(entry["phase"], []).append(log)
+        for phase, logs in sorted(by_phase.items()):
+            in_total = sum(log.input_tokens for log in logs)
+            out_total = sum(log.output_tokens for log in logs)
+            print(
+                f"  {phase:15} calls={len(logs)} "
+                f"in={in_total} out={out_total}"
+            )
+        in_grand = sum(log.input_tokens for log in core_logs)
+        out_grand = sum(log.output_tokens for log in core_logs)
+        print(f"  {'TOTAL':15} calls={len(core_logs)} in={in_grand} out={out_grand}")
+    else:
+        print("  (no on_call telemetry recorded)")
+
     _section("DIMENSIONS RETURNED BY DECOMPOSE")
     dims = None
     for call in core.call_log:
-        if classify_phase(call["messages"]) != "decompose":
+        if call["phase"] != "decompose":
             continue
-        response = call.get("response", "")
-        try:
-            parsed = json.loads(response)
-            dims = parsed.get("dimensions")
-        except (json.JSONDecodeError, TypeError):
-            print("  decompose response did NOT parse as JSON")
-            print(f"  raw (first 500 chars): {response[:500]!r}")
-            break
+        parsed = parse_json_response(call.get("response", ""))
+        if isinstance(parsed, dict) and isinstance(parsed.get("dimensions"), list):
+            dims = parsed["dimensions"]
+        else:
+            print("  decompose response did NOT parse to expected shape")
+            preview = (call.get("response") or "")[:500]
+            print(f"  raw (first 500 chars): {preview!r}")
+        break
     if dims is None:
         print("  (no dimensions — see parse failure above or missing call)")
     elif not isinstance(dims, list):
@@ -253,32 +242,26 @@ def report(
     parse_failures: list[tuple[int, str, str]] = []
     json_expected = {"decompose", "generate", "rubric_judge", "pairwise_judge"}
     for i, call in enumerate(core.call_log):
-        phase = classify_phase(call["messages"])
-        if phase not in json_expected:
+        if call["phase"] not in json_expected:
             continue
-        response = call.get("response", "")
-        try:
-            json.loads(response)
-        except (json.JSONDecodeError, TypeError):
-            parse_failures.append((i, phase, response))
+        if parse_json_response(call.get("response", "")) is None:
+            parse_failures.append((i, call["phase"], call.get("response", "")))
     if not parse_failures:
-        print("  All JSON-expected responses parsed cleanly.")
+        print("  All JSON-expected responses parsed cleanly via parse_json_response.")
     else:
         print(f"  {len(parse_failures)} parse failure(s):")
         for i, phase, raw in parse_failures:
-            print(f"  - call #{i+1} (phase={phase}):")
+            print(f"  - call #{i + 1} (phase={phase}):")
             for line in raw[:500].splitlines():
                 print(f"      {line}")
 
     _section("CANDIDATE input_data SHAPES (from generate calls)")
     all_shapes: list[list[str]] = []
     for call in core.call_log:
-        if classify_phase(call["messages"]) != "generate":
+        if call["phase"] != "generate":
             continue
-        response = call.get("response", "")
-        try:
-            parsed = json.loads(response)
-        except (json.JSONDecodeError, TypeError):
+        parsed = parse_json_response(call.get("response", ""))
+        if not isinstance(parsed, dict):
             print("  (one generate response did not parse)")
             continue
         for item in parsed.get("candidates", []):
@@ -312,18 +295,25 @@ def report(
 
 
 async def main() -> int:
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    load_dotenv()
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key or len(api_key) < 10:
         print(
-            "ERROR: ANTHROPIC_API_KEY environment variable is not set.\n"
-            "Set it before running: export ANTHROPIC_API_KEY=sk-ant-...",
+            "ERROR: ANTHROPIC_API_KEY is not loaded. Populate ./.env with "
+            "ANTHROPIC_API_KEY=sk-ant-... and re-run.",
             file=sys.stderr,
         )
         return 1
 
     start = time.monotonic()
 
-    core_backend = RealAnthropicBackend(label="core")
-    alt_backend = RealAnthropicBackend(label="alt")
+    config = AnthropicConfig(default_model=MODEL, max_tokens=MAX_TOKENS)
+    core_logs: list[RunnerCallLog] = []
+    inner_core = AnthropicBackend(config=config, on_call=core_logs.append)
+    inner_alt = AnthropicBackend(config=config)
+    core_backend = RecordingBackend("core", inner_core)
+    alt_backend = RecordingBackend("alt", inner_alt)
 
     hypothesis = Hypothesis(
         text=(
@@ -364,6 +354,11 @@ async def main() -> int:
             target_n=TARGET_N,
             min_required=MIN_REQUIRED,
         )
+    except (AutoAlternativeUnavailable, BudgetExhausted):
+        # These are pre-pipeline errors and the smoke scenario does not
+        # invoke ``make_auto_alternative``. Catching them here is purely
+        # defensive — surfacing cleanly rather than crashing.
+        raise
     except Exception as e:
         elapsed = time.monotonic() - start
         print(
@@ -374,7 +369,7 @@ async def main() -> int:
         raise
 
     elapsed = time.monotonic() - start
-    report(core_backend, alt_backend, result, budget, elapsed)
+    report(core_backend, alt_backend, core_logs, result, budget, elapsed)
     return 0
 
 
