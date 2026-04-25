@@ -113,7 +113,7 @@ calls in this session.
 
 ## Task 4.4: `examples/sarcasm/` — full
 
-- Status: pending
+- Status: done
 - Depends: 4.2 (so the config can be validated by the loader)
 - Files:
   - `examples/sarcasm/system.py` (new)
