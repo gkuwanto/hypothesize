@@ -1,0 +1,478 @@
+hypothesis: the QA system fails on multi-hop questions requiring chained reasoning
+  across two entities, where the intermediate entity is not named in the question
+metadata:
+  generated_at: '2026-04-25T23:13:05.295217Z'
+  model: claude-haiku-4-5-20251001
+  budget_used: 100
+  budget_max: 200
+  status: ok
+  config_name: hotpotqa-multihop
+  candidate_source: examples/hotpotqa/data/multi_hop_50.jsonl
+  candidates_total: 50
+  stats:
+    both_correct: 17
+    both_wrong: 27
+    only_decompose_right: 3
+    only_direct_right: 3
+test_cases:
+- input:
+    question: C. Bernard Jackson founded the center that started the career of which
+      actor, who played the part of Marty Castillo in "Miami Vice"?
+  expected_behavior: answer should match gold 'Edward James Olmos' (decomposed prompt
+    produced 'Edward James Olmos')
+  discrimination_evidence:
+    id: 5a861c0d5542994775f606f7
+    gold_answer: Edward James Olmos
+    current_output:
+      answer: John Ortiz
+    alternative_output:
+      answer: Edward James Olmos
+    current_verdict:
+      passed: false
+      reason: answer 'John Ortiz' does not match gold 'Edward James Olmos'
+      judge_type: exact_match
+    alternative_verdict:
+      passed: true
+      reason: answer 'Edward James Olmos' matches gold 'Edward James Olmos'
+      judge_type: exact_match
+- input:
+    question: What musical was inspired by the films that included Ruth Leuwerik's
+      best known role?
+  expected_behavior: answer should match gold 'The Sound of Music' (decomposed prompt
+    produced 'The Sound of Music')
+  discrimination_evidence:
+    id: 5adc6a3b55429947ff173953
+    gold_answer: The Sound of Music
+    current_output:
+      answer: Elisabeth
+    alternative_output:
+      answer: The Sound of Music
+    current_verdict:
+      passed: false
+      reason: answer 'Elisabeth' does not match gold 'The Sound of Music'
+      judge_type: exact_match
+    alternative_verdict:
+      passed: true
+      reason: answer 'The Sound of Music' matches gold 'The Sound of Music'
+      judge_type: exact_match
+- input:
+    question: 'The show featuring a young boy named Gerald Bald Z premiered on what
+      TV channel? '
+  expected_behavior: answer should match gold 'Cartoon Network' (decomposed prompt
+    produced 'Cartoon Network')
+  discrimination_evidence:
+    id: 5a78bd515542990784727749
+    gold_answer: Cartoon Network
+    current_output:
+      answer: Nickelodeon
+    alternative_output:
+      answer: Cartoon Network
+    current_verdict:
+      passed: false
+      reason: answer 'Nickelodeon' does not match gold 'Cartoon Network'
+      judge_type: exact_match
+    alternative_verdict:
+      passed: true
+      reason: answer 'Cartoon Network' matches gold 'Cartoon Network'
+      judge_type: exact_match
+all_rows:
+- id: 5ae73eca5542991e8301cc37
+  question: 'What other notable role did the star actor from Jeremy perform? '
+  gold_answer: the voice of The Beast
+  direct_answer: The Beast in Beauty and the Beast (1991)
+  decompose_answer: Voice of the Beast in Disney's "Beauty and the Beast"
+  direct_pass: false
+  decompose_pass: false
+- id: 5a80fb97554299260e20a1eb
+  question: "What was the name of the first biography of Bront\xEB written by the\
+    \ author of Mary Barton?"
+  gold_answer: Elizabeth Gaskell
+  direct_answer: "The Life of Charlotte Bront\xEB"
+  decompose_answer: "The Life of Charlotte Bront\xEB"
+  direct_pass: false
+  decompose_pass: false
+- id: 5a75d9c05542992db94736f6
+  question: Which English-born Australian singer/songwriter was a judge on season
+    8 of Australia's Got Talent?
+  gold_answer: Sophie Charlene Akland Monk
+  direct_answer: Dannii Minogue
+  decompose_answer: Geri Halliwell
+  direct_pass: false
+  decompose_pass: false
+- id: 5a7f33115542992e7d278c84
+  question: Who is the mother of Mary, Crown Princess of Denmark's husband?
+  gold_answer: Queen Margrethe II
+  direct_answer: Queen Margrethe II of Denmark
+  decompose_answer: Queen Margrethe II of Denmark
+  direct_pass: true
+  decompose_pass: true
+- id: 5a74e9c255429974ef308c93
+  question: The book translated as "School of Religions" was suggested to be written
+    by whom?
+  gold_answer: Mohsin Fani
+  direct_answer: I cannot determine this without additional information
+  decompose_answer: Al-Shahrastani
+  direct_pass: false
+  decompose_pass: false
+- id: 5a8fb0be5542997ba9cb32ed
+  question: What was the previous name of the hotel Bill Cosby recorded his comedy
+    album, For Adults Only, in?
+  gold_answer: the Las Vegas Hilton
+  direct_answer: Flamingo Hotel
+  decompose_answer: The Playboy Club
+  direct_pass: false
+  decompose_pass: false
+- id: 5a8b99c355429950cd6afd28
+  question: The La Senza brand is currently owned by a fashion retailer based in what
+    Ohio city?
+  gold_answer: Columbus
+  direct_answer: Columbus
+  decompose_answer: Columbus
+  direct_pass: true
+  decompose_pass: true
+- id: 5a7f3bcd55429930675136c3
+  question: '"wild combination" was a film about a man who was an American cellist,
+    composer, producer and singer, who is he?'
+  gold_answer: Arthur Russell
+  direct_answer: Arthur Russell
+  decompose_answer: Arthur Russell
+  direct_pass: true
+  decompose_pass: true
+- id: 5a729cc25542991f9a20c532
+  question: Which author wrote about a woman captured by the Symbionese Liberation
+    Army?
+  gold_answer: Paul Avery
+  direct_answer: Jeffrey Toobin
+  decompose_answer: Patty Hearst
+  direct_pass: false
+  decompose_pass: false
+- id: 5ab94fa25542996be2020474
+  question: What is represented on the cover art of the studio album that includes
+    the song "Speed of Sound"?
+  gold_answer: Baudot code
+  direct_answer: A close-up of a man's face with red-tinted coloring
+  decompose_answer: Chromosomes (or genetic material/XY chromosomes)
+  direct_pass: false
+  decompose_pass: false
+- id: 5a75e62f5542992d0ec06013
+  question: 'Johnny Mathis: Wonderful Wonderful aired at what luxury hotel, casino
+    and spa resort located in Atlantic City, New Jersey?'
+  gold_answer: Tropicana Casino & Resort
+  direct_answer: Borgata Hotel Casino & Spa
+  decompose_answer: Bally's Atlantic City
+  direct_pass: false
+  decompose_pass: false
+- id: 5a861c0d5542994775f606f7
+  question: C. Bernard Jackson founded the center that started the career of which
+    actor, who played the part of Marty Castillo in "Miami Vice"?
+  gold_answer: Edward James Olmos
+  direct_answer: John Ortiz
+  decompose_answer: Edward James Olmos
+  direct_pass: false
+  decompose_pass: true
+- id: 5adfc8f45542992d7e9f93d0
+  question: What English rock band with Guy Garvey did Joe Duddell work with?
+  gold_answer: Elbow
+  direct_answer: Elbow
+  decompose_answer: Elbow
+  direct_pass: true
+  decompose_pass: true
+- id: 5ade3b925542992fa25da70a
+  question: What was the middle name of the pilot who was portrayed by Levon Helm
+    in the film The Right Stuff ?
+  gold_answer: Lynwood
+  direct_answer: Elwood
+  decompose_answer: Elwood
+  direct_pass: false
+  decompose_pass: false
+- id: 5ae27f555542992decbdcd30
+  question: Caste starred what English character actress who was nominated for an
+    Academ Award for her performance in Room at the Top?
+  gold_answer: Hermione Baddeley
+  direct_answer: Hermione Baddeley
+  decompose_answer: Heather Sears
+  direct_pass: true
+  decompose_pass: false
+- id: 5a9068a95542990a98493621
+  question: on 16 January 1995 "First Knight" was being filmed at a studio located
+    how far from Windsor ?
+  gold_answer: 7 miles
+  direct_answer: 20 miles
+  decompose_answer: 10 miles
+  direct_pass: false
+  decompose_pass: false
+- id: 5ae617285542996de7b71b4c
+  question: The Lady Craved Excitement was a film that featured the British character
+    actor originally of what nationality?
+  gold_answer: South African-born
+  direct_answer: I cannot provide a reliable answer without additional verified information
+    about the film's cast
+  decompose_answer: German
+  direct_pass: false
+  decompose_pass: false
+- id: 5a7224ab55429971e9dc92dd
+  question: Who was the lead singer of Eighth Wonder and who was born on March, 4th
+    in 1968?
+  gold_answer: Patricia Jude Francis Kensit
+  direct_answer: Natasja Saad
+  decompose_answer: Patsy Kensit
+  direct_pass: false
+  decompose_pass: false
+- id: 5adead1855429939a52fe948
+  question: The person "Planet Earth Rock and Roll Orchestra" was the final solo album
+    for died on what date?
+  gold_answer: January 28, 2016
+  direct_answer: I cannot provide a reliable answer to this question due to uncertainty
+    about which artist recorded "Planet Earth Rock and Roll Orchestra" as their final
+    solo album
+  decompose_answer: I cannot determine this with sufficient certainty from the information
+    available
+  direct_pass: false
+  decompose_pass: false
+- id: 5a88d7875542993b751ca876
+  question: Who won the 1981 CART PPG Indy Car World Series in Avondale Arizona?
+  gold_answer: Rick Ravon Mears
+  direct_answer: Unable to determine - insufficient reliable information available
+  decompose_answer: I cannot verify this race occurred in 1981, as CART was not founded
+    until 1986 and Avondale did not host Indy car races in 1981
+  direct_pass: false
+  decompose_pass: false
+- id: 5a775bd65542993569682d6b
+  question: What classmate of Tony Hendra is the Director of Research at the Centre
+    for Theoretical Cosmology within the University of Cambridge?
+  gold_answer: Stephen Hawking
+  direct_answer: Stephen Hawking
+  decompose_answer: Stephen Hawking
+  direct_pass: true
+  decompose_pass: true
+- id: 5abd6db755429933744ab7d0
+  question: What was the nationality of the author of "The Sunlight on the Garden"?
+  gold_answer: Irish
+  direct_answer: Irish
+  decompose_answer: Northern Irish
+  direct_pass: true
+  decompose_pass: true
+- id: 5addd5795542990dbb2f7e9d
+  question: Used to This was included on the streaming version of the album released
+    in 2017 on what label?
+  gold_answer: A1 Recordings
+  direct_answer: I cannot determine the answer without additional context about which
+    specific album is being referenced
+  decompose_answer: I cannot determine the answer without additional context about
+    which album or artist this question refers to
+  direct_pass: false
+  decompose_pass: false
+- id: 5a736aa95542991f29ee2dfa
+  question: Cordyline ruba grows from Bundaberg, Queensland to which northeastern
+    city in New South Whales, Australia?
+  gold_answer: Lismore
+  direct_answer: Byron Bay
+  decompose_answer: Byron Bay
+  direct_pass: false
+  decompose_pass: false
+- id: 5abd077055429965836004f4
+  question: Who created and mostly wrote the show that Idris Akuna Elba played Stringer
+    Bell in?
+  gold_answer: David Simon
+  direct_answer: David Simon
+  decompose_answer: David Simon
+  direct_pass: true
+  decompose_pass: true
+- id: 5a9064d05542990a9849360f
+  question: What actor's debut film also starred an actor who received four National
+    Film Awards and eight Filmfare Awards, as well as an Academy Award nomination?
+  gold_answer: Tariq Khan
+  direct_answer: Abhishek Bachchan
+  decompose_answer: Naseeruddin Shah
+  direct_pass: false
+  decompose_pass: false
+- id: 5a733b835542991f9a20c6b2
+  question: Which movie is loosley based off the Brother Grimm's "Iron Henry"?
+  gold_answer: The Frog Prince
+  direct_answer: The Frog Prince (various adaptations)
+  decompose_answer: I cannot determine this with certainty from my knowledge base
+  direct_pass: true
+  decompose_pass: false
+- id: 5a7cb8bc554299452d57b9be
+  question: What is the capacity of the stadium that is the home ground of the Lahore
+    Eagles?
+  gold_answer: 27,000
+  direct_answer: 27,000
+  decompose_answer: 27,236
+  direct_pass: true
+  decompose_pass: false
+- id: 5a89e0ec5542992e4fca8427
+  question: What philosophical system did the author of a novel about Howard Roark
+    develop?
+  gold_answer: Objectivism
+  direct_answer: Objectivism
+  decompose_answer: Objectivism
+  direct_pass: true
+  decompose_pass: true
+- id: 5a80752b5542992bc0c4a720
+  question: What was the air date of "The Simpsons" episode written by Matt Selman
+    which parodied the VH1 series "Behind the Music"?
+  gold_answer: May 21, 2000
+  direct_answer: I cannot provide a reliable answer to this question as I'm not certain
+    which episode written by Matt Selman parodied "Behind the Music."
+  decompose_answer: I cannot determine this with certainty from my training data
+  direct_pass: false
+  decompose_pass: false
+- id: 5adc6a3b55429947ff173953
+  question: What musical was inspired by the films that included Ruth Leuwerik's best
+    known role?
+  gold_answer: The Sound of Music
+  direct_answer: Elisabeth
+  decompose_answer: The Sound of Music
+  direct_pass: false
+  decompose_pass: true
+- id: 5a737ef85542992d56e7e336
+  question: What British rock band released the album Brothers in Arms in 1985 which
+    also featured a song with the same title?
+  gold_answer: Dire Straits
+  direct_answer: Dire Straits
+  decompose_answer: Dire Straits
+  direct_pass: true
+  decompose_pass: true
+- id: 5a8dd47c5542995a26add3fa
+  question: Love and Poison is the official biography of an English alternative rock
+    band formed in what city?
+  gold_answer: London
+  direct_answer: I cannot reliably determine the answer without additional context
+    or verification of which band's biography "Love and Poison" refers to
+  decompose_answer: I cannot determine this with certainty from my knowledge base
+  direct_pass: false
+  decompose_pass: false
+- id: 5a7b782455429927d897bfd7
+  question: Staten Island Summer, starred what actress who was a cast member of "Saturday
+    Night Live"?
+  gold_answer: Cecily Strong
+  direct_answer: Cecily Strong
+  decompose_answer: Cecily Strong
+  direct_pass: true
+  decompose_pass: true
+- id: 5ac1682855429964131be1d2
+  question: A journal to which Jim Rasenberger contributes is the official journal
+    of an institute located in what city?
+  gold_answer: Washington, D.C.
+  direct_answer: Washington, D.C.
+  decompose_answer: Washington, D.C.
+  direct_pass: true
+  decompose_pass: true
+- id: 5adf35935542993344016c36
+  question: Which wrestler, who died in 2009, featured on the wrestling show Starrcade?
+  gold_answer: '"Dr. Death" Steve Williams'
+  direct_answer: Umaga
+  decompose_answer: Umaga
+  direct_pass: false
+  decompose_pass: false
+- id: 5ac2ab9455429967731025f0
+  question: 'Which award did the Tunisian-Dutch actor that starred in Collide win? '
+  gold_answer: Best Actor in 2013
+  direct_answer: I cannot determine this with certainty from the available information
+  decompose_answer: I cannot determine this with certainty based on available information
+  direct_pass: false
+  decompose_pass: false
+- id: 5ab3b0bf5542992ade7c6e39
+  question: What year did Guns N Roses perform a promo for a movie starring Arnold
+    Schwarzenegger as a former New York Police detective?
+  gold_answer: '1999'
+  direct_answer: '1993'
+  decompose_answer: '1993'
+  direct_pass: false
+  decompose_pass: false
+- id: 5a73f2035542993a88ae2ea8
+  question: What song was created by the group consisting of Jeffrey Jey, Maurizio
+    Lobina and Gabry Ponte and released on 15 January 1999?
+  gold_answer: Blue
+  direct_answer: Blue (Da Ba Dee)
+  decompose_answer: Blue (Da Ba Dee)
+  direct_pass: true
+  decompose_pass: true
+- id: 5ae4d1a355429913cc204513
+  question: Which American BMX rider hosted a show that spun off from "Real World"
+    and "Road Rules"?
+  gold_answer: T. J. Lavin
+  direct_answer: Rob Dyrdek
+  decompose_answer: Dave Mirra
+  direct_pass: false
+  decompose_pass: false
+- id: 5a7471f655429979e2882955
+  question: Which American main title designer designed sequences for the founder
+    of the Sundance Film Festival?
+  gold_answer: Wayne Fitzgerald
+  direct_answer: Saul Bass
+  decompose_answer: Saul Bass
+  direct_pass: false
+  decompose_pass: false
+- id: 5a7b81715542997c3ec971d4
+  question: The author of the "The Dagger and the Coin" fantasy series was nominated
+    for what award in 2017?
+  gold_answer: Hugo Award
+  direct_answer: Hugo Award
+  decompose_answer: Hugo Award
+  direct_pass: true
+  decompose_pass: true
+- id: 5a89fea655429970aeb701eb
+  question: In which film did Emilio Estevez star in in the same year as Nightmares
+  gold_answer: The Outsiders
+  direct_answer: The Outsiders
+  decompose_answer: The Outsiders
+  direct_pass: true
+  decompose_pass: true
+- id: 5abec90a5542994516f45438
+  question: 1920 Politics was a Republican political strategy to reassert the authority
+    of the white race in which US state?
+  gold_answer: Hawaii
+  direct_answer: I cannot reliably answer this question without additional context
+    or verification of the specific historical reference being made
+  decompose_answer: Mississippi
+  direct_pass: false
+  decompose_pass: false
+- id: 5ab677e2554299110f219a13
+  question: What city does Saint Paul School of Theology and United Methodist Church
+    of the Resurrection have in common?
+  gold_answer: Kansas
+  direct_answer: Kansas City
+  decompose_answer: Kansas City
+  direct_pass: true
+  decompose_pass: true
+- id: 5ae5dae2554299546bf82fa4
+  question: Faruk Halibegovic was born in what city that is the capital and largest
+    city of Bosnia and Herzegovina with a population of 275,524?
+  gold_answer: Sarajevo
+  direct_answer: Sarajevo
+  decompose_answer: Sarajevo
+  direct_pass: true
+  decompose_pass: true
+- id: 5a78bd515542990784727749
+  question: 'The show featuring a young boy named Gerald Bald Z premiered on what
+    TV channel? '
+  gold_answer: Cartoon Network
+  direct_answer: Nickelodeon
+  decompose_answer: Cartoon Network
+  direct_pass: false
+  decompose_pass: true
+- id: 5a8e27d45542995a26add46a
+  question: Jaclyn Stapp is married to the former frontman of a band that disbanded
+    in what year?
+  gold_answer: '2004'
+  direct_answer: '2004'
+  decompose_answer: '2004'
+  direct_pass: true
+  decompose_pass: true
+- id: 5ae0d85d5542990adbacf67e
+  question: Which district includes the island in New York City's East River which
+    Pete Grannis represented in the New York State Assembly?
+  gold_answer: represented District 65
+  direct_answer: 49th Assembly District
+  decompose_answer: 28th Assembly District
+  direct_pass: false
+  decompose_pass: false
+- id: 5a7136e25542994082a3e67e
+  question: What Hong Kong actor born in 1980 will star in "Heart and Greed"?
+  gold_answer: Bosco Wong Chung-chak
+  direct_answer: Kevin Cheng
+  decompose_answer: Vincent Wong
+  direct_pass: false
+  decompose_pass: false

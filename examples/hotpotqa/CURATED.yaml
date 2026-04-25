@@ -1,0 +1,57 @@
+hypothesis: >-
+  the QA system fails on multi-hop questions requiring chained
+  reasoning across two entities, where the intermediate entity is
+  not named in the question
+source: examples/hotpotqa/output/multi_hop_filter_run1.yaml
+selection_criteria:
+  - "Self-evidently multi-hop — visible bridge entity"
+  - "Surface-level interesting — recognizable subject"
+  - "Diverse structure across the curated set"
+  - "Real cases from a 50-item filter pass; gold answers from HotpotQA"
+filter_run_summary:
+  total: 50
+  both_correct: 17
+  both_wrong: 27
+  only_decompose_right: 3
+  only_direct_right: 3
+curated_count: 3
+curated_target: 4
+note: >-
+  Three cases were the natural set; inventing a fourth would mean
+  lowering the quality bar. Surfacing the count to the user.
+test_cases:
+  - id: "5a861c0d5542994775f606f7"
+    question: >-
+      C. Bernard Jackson founded the center that started the career
+      of which actor, who played the part of Marty Castillo in
+      "Miami Vice"?
+    direct_answer: John Ortiz
+    decompose_answer: Edward James Olmos
+    gold_answer: Edward James Olmos
+    note: >-
+      Two-hop bridge through center founder → notable alumnus, with
+      a specific role anchor that lets the audience verify the
+      answer at a glance.
+  - id: "5adc6a3b55429947ff173953"
+    question: >-
+      What musical was inspired by the films that included Ruth
+      Leuwerik's best known role?
+    direct_answer: Elisabeth
+    decompose_answer: The Sound of Music
+    gold_answer: The Sound of Music
+    note: >-
+      Iconic answer; bridge runs Ruth Leuwerik → Maria von Trapp in
+      The Trapp Family films → inspired The Sound of Music. DIRECT
+      lands on a different real musical (confidently wrong, not
+      refusing).
+  - id: "5a78bd515542990784727749"
+    question: >-
+      The show featuring a young boy named Gerald Bald Z premiered
+      on what TV channel?
+    direct_answer: Nickelodeon
+    decompose_answer: Cartoon Network
+    gold_answer: Cartoon Network
+    note: >-
+      Short and vertical-friendly. DIRECT pattern-matches the
+      kids'-show genre to the dominant channel; DECOMPOSE has to
+      identify the show before naming the channel.

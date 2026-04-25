@@ -1,64 +1,75 @@
-# Example: HotpotQA multi-hop QA (scaffold)
+# Example: HotpotQA closed-book multi-hop QA
 
-> **NOT YET RUNNABLE.** This directory is a scaffold. Finish the TODOs
-> in `system.py` before invoking the CLI against this config.
+A second real-dataset example alongside `examples/sarcasm/`. Where
+sarcasm uses `RubricJudge` and generates synthetic candidates from a
+hypothesis, this example operates as a **filter** over a fixed eval
+dataset using `ExactMatchJudge` against gold answers.
 
-## Why this example exists
+The mechanism in one paragraph:
 
-Demonstrates the shape of a hypothesize integration with a
-real-dataset, non-classifier system — multi-hop QA with retrieval —
-without committing to a full implementation in-session. The sarcasm
-example is the demo's hero; this one shows the path for users who
-want to apply hypothesize to a richer system.
+> Closed-book QA is run twice on each of 50 HotpotQA bridge questions
+> — once with a `DIRECT_PROMPT` that asks for a concise answer, once
+> with a `DECOMPOSE_PROMPT` that asks the model to identify
+> sub-questions before answering. A discriminating case is one where
+> DIRECT got the gold answer wrong and DECOMPOSE got it right.
 
-## Manual setup
+## Why a separate script, not `hypothesize run`?
 
-1. **Download HotpotQA.** The `datasets` dependency is already in
-   `pyproject.toml`. From the repo root:
+The standard pipeline (`src/hypothesize/core/discrimination.py`) is
+built around LLM-generated candidates and a rubric-based judge. A
+filter pass over a fixed eval set with exact-match judging is a
+slightly different code path. Adding it as a CLI flag would have
+meant a parallel runner and a new judge selector — too much surface
+for one example. Instead, `run_filter.py` calls the underlying
+primitives directly. The `config.yaml` is preserved so the example
+still surfaces in `hypothesize list` / `discover_systems` and the
+shared LLM/budget settings live in one place.
 
-   ```python
-   from datasets import load_dataset
-   ds = load_dataset("hotpot_qa", "distractor", split="validation[:200]")
-   ds.save_to_disk("examples/hotpotqa/data")
-   ```
+## Files
 
-   200 entries is enough to discriminate; the full set is too slow.
+- `system.py` — closed-book QA runner with `DIRECT_PROMPT` and
+  `DECOMPOSE_PROMPT`, both terminating with `Final answer: <X>` so
+  responses parse cleanly.
+- `data/multi_hop_50.jsonl` — 50 HotpotQA bridge questions with
+  gold answers. Built reproducibly by `build_dataset.py`.
+- `data/README.md` — source and filter criteria for the dataset.
+- `build_dataset.py` — one-shot script to regenerate the dataset.
+- `run_filter.py` — runs both prompts on each candidate and writes
+  `output/multi_hop_filter_run1.yaml`.
+- `output/multi_hop_filter_run1.yaml` — last filter run, including
+  `all_rows` and the discriminating subset.
+- `CURATED.md` / `CURATED.yaml` — selected cases for video.
+- `config.yaml` — the system shape, used by `run_filter.py` and
+  surfaced in `hypothesize list`.
 
-2. **Decide what shape to feed the runner.** A reasonable choice:
+## Run it
 
-   ```python
-   {"question": str, "contexts": list[str], "gold_answer": str}
-   ```
-
-   Hypothesize's generate phase will infer the shape from the
-   hypothesis; you can also write candidates by hand if you want
-   more control.
-
-3. **Fill in `system.py`.** The runner currently raises
-   `NotImplementedError` with a TODO message. Replace the body with
-   a Claude call that takes the question + contexts and returns
-   `{"answer": str}`. Use `backend.complete` if you want the
-   prompt-factory convention to work for auto-alternative; otherwise,
-   construct an `AnthropicBackend` directly.
-
-4. **Tune the hypothesis.** The default in `config.yaml` is one of
-   many reasonable failure modes for multi-hop QA. Other angles:
-
-   - "the QA system trusts the first context regardless of relevance"
-   - "the QA system fails when the second hop requires a date or
-     number it cannot read directly"
-   - "the QA system hallucinates entities that match the question's
-     surface form but are not in the contexts"
-
-## Run it (after the TODOs are done)
+Set `ANTHROPIC_API_KEY` in `.env` at the repo root, then:
 
 ```bash
-hypothesize run --config examples/hotpotqa/config.yaml
+# Build the dataset (one-time):
+python examples/hotpotqa/build_dataset.py
+
+# Run the filter pass:
+python examples/hotpotqa/run_filter.py
 ```
 
-## Why we kept the scaffold
+Expected: ~100 LLM calls (50 candidates × 2 prompts), $0.05–$0.15
+on Claude Haiku 4.5, ~3 minutes wall time.
 
-The sarcasm example is enough to validate the magic moment. A second
-real-dataset example proves the tool's generality without doubling
-the demo surface in a single session. The scaffold gives a future
-contributor a clear starting point.
+## Last run statistics
+
+50 candidates / 17 both correct / 27 both wrong / 3 only-decompose
+right / 3 only-direct right. The 3-vs-3 split between the
+discriminating directions is itself a finding: decomposed reasoning
+helps on chained-entity questions but costs DIRECT-solvable items.
+See `CURATED.md`.
+
+## What this example demonstrates
+
+- A non-classifier hypothesize integration with a real eval
+  dataset.
+- The "filter" mode complementing the "generate" mode the sarcasm
+  example uses.
+- Honest reporting when the discriminating count is below
+  expectations: 3 cases is a finding, not a failure.

@@ -17,6 +17,109 @@ future sessions should know about.
 
 ## Entries
 
+## 2026-04-25 — HotpotQA example complete
+
+- Closed-book multi-hop QA with `DIRECT_PROMPT` and `DECOMPOSE_PROMPT`
+  variants. `examples/hotpotqa/system.py` is now real (no longer
+  scaffolded), exposes the prompt-factory convention, and parses
+  multi-line model responses by extracting the trailing `Final
+  answer: <X>` line that both prompts instruct Claude to emit.
+- 50-item dataset built reproducibly from HotpotQA distractor /
+  validation, filtered to bridge questions with question ≤25 words,
+  answer ≤5 words, and an "interesting-entity" keyword filter
+  (film / album / city / actor / etc.). Source script
+  `examples/hotpotqa/build_dataset.py` (seeded with 20260425).
+- Filter run found **3 discriminating cases** out of 50 (DIRECT
+  fails, DECOMPOSE passes). Also surfaced a 3-case reverse-
+  discriminating set (DIRECT passes, DECOMPOSE fails — over-
+  caution / speculative intermediate steps), which is itself a
+  finding the video should not paper over.
+- 3 curated for video; brief asked for 4 but the natural set was 3.
+  Curating a fourth would have meant lowering the quality bar or
+  re-rolling randomness. Stuck with 3, surfaced the count clearly
+  in `CURATED.md`.
+- Total cost incurred this session: ~$0.10 (≈100 Haiku 4.5 calls
+  at the live filter pass; a small amount on the live sanity
+  check). Well under the $2 hard cap.
+- Mechanism: filter over a fixed eval, `ExactMatchJudge`-style
+  containment match against gold answers. Implemented as a
+  standalone script (`run_filter.py`), not via the CLI.
+
+### Option B chosen over Option A
+
+The brief offered (A) adding a `--candidates-from <path>` CLI flag
+and (B) writing a standalone `run_filter.py`. Inspecting the code
+showed Option A would not be the "~50 lines additive" the brief
+estimated:
+
+- The CLI's `run_discrimination` always wires `RubricJudge`. To
+  use `ExactMatchJudge` we would need a second judge selector.
+- `core/discrimination.py` (frozen — Feature 01) always calls
+  `decompose_hypothesis` and `generate_candidates`. A "user-
+  supplied candidate pool" path would have to bypass this entry
+  point entirely, i.e. a parallel pipeline in CLI code rather
+  than a small flag.
+
+That is a CLI refactor, not an additive flag. Option B contains
+the change to `examples/hotpotqa/`, leaves frozen layers alone, and
+is honest about the example's narrow scope. The `config.yaml` still
+loads cleanly via `load_run_config` so the example surfaces in
+`hypothesize list` and `discover_systems`.
+
+### Surprises
+
+- Haiku 4.5 ignored "Provide only the final answer, no explanation"
+  on hard bridge questions — it produced multi-line reasoning even
+  with the DIRECT prompt. Fixed by appending an explicit "End your
+  response with a single line of the form: `Final answer: <X>`"
+  instruction to both prompts and parsing the last `Final answer:`
+  line in `_normalize_answer`. This is a plausible, real-world
+  prompt convention; not a strawman or test-only hack.
+- Many gold answers in HotpotQA are noisy (the question asks for
+  the "name of the biography" but the gold is the biographer's
+  name). The filter pass therefore uses bidirectional containment
+  on case- and punctuation-normalised forms rather than strict
+  equality. This both papers over the noisy gold answers and
+  accepts model answers that are slightly more verbose than the
+  span (e.g. "Queen Margrethe II of Denmark" vs gold "Queen
+  Margrethe II"). Documented in `run_filter.py::_exact_match`.
+- The 3-vs-3 only-DECOMPOSE-right vs only-DIRECT-right split was
+  unexpected. Decomposition isn't a strict win on bridge
+  questions; it sometimes induces analytical refusals ("I cannot
+  determine this with certainty") on items DIRECT confidently
+  nails. Worth noting in any video framing.
+- Closed-book recall is the dominant bottleneck — 27/50 are wrong
+  on both prompts. Most of those are obscure entities (Faruk
+  Halibegovic, Cordyline ruba, Eighth Wonder lead singer); no
+  prompt change rescues recall. The discriminating zone is
+  narrower than the 5-15 the brief estimated.
+
+### Files added / modified
+
+- `examples/hotpotqa/system.py` — finished closed-book QA runner.
+- `examples/hotpotqa/config.yaml` — finalised, validates via
+  `load_run_config`.
+- `examples/hotpotqa/build_dataset.py` — new, reproducibly seeds
+  the 50-item subset.
+- `examples/hotpotqa/run_filter.py` — new, the filter-pass entry
+  point.
+- `examples/hotpotqa/data/multi_hop_50.jsonl` — new, 50 items.
+- `examples/hotpotqa/data/README.md` — new, documents source.
+- `examples/hotpotqa/output/multi_hop_filter_run1.yaml` — run
+  artefact, 3 discriminating cases + 50 raw rows.
+- `examples/hotpotqa/CURATED.md`, `CURATED.yaml` — 3 cases.
+- `examples/hotpotqa/README.md` — rewritten for runnable status.
+- `tests/examples/test_hotpotqa.py` — extended from scaffold-mode
+  tests (NotImplementedError) to 26 tests covering the runner
+  factory, prompt selection, answer normalisation including
+  multi-line "Final answer:" extraction, and config validation.
+- `DECISIONS.md` — this entry.
+
+No source files in `src/hypothesize/core/`, `src/hypothesize/llm/`,
+`src/hypothesize/adapters/python_module.py`, `src/hypothesize/mcp/`,
+or `examples/sarcasm/` were touched. `pyproject.toml` and
+`tech.md` were not modified — `datasets` was already declared.
+
 ## 2026-04-24 — Feature 04 complete
 
 - Decision: Feature 04 (developer-facing surface — CLI, Claude Code
