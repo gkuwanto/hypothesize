@@ -1,0 +1,35 @@
+# Sarcasm sentiment classifier — full hypothesize example.
+#
+# Run with:
+#   hypothesize run --config examples/sarcasm/config.yaml
+#
+# Set ANTHROPIC_API_KEY in .env before running.
+
+name: sarcasm-sentiment
+
+current:
+  adapter: python_module
+  module_path: examples/sarcasm/system.py
+  entrypoint: run
+
+# `auto` triggers make_auto_alternative: Claude rewrites the system
+# prompt in `system.py` to specifically mitigate the hypothesis below.
+alternative:
+  adapter: auto
+
+hypothesis:
+  text: >-
+    the sentiment classifier mislabels sarcastic positive text — surface
+    tokens read positive but intent is negative — as positive
+  context_refs: []
+
+llm:
+  default_model: claude-haiku-4-5-20251001
+  max_tokens: 2048
+
+budget:
+  max_llm_calls: 100
+
+defaults:
+  target_n: 5
+  min_required: 3

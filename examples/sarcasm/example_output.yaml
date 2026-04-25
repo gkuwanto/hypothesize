@@ -1,0 +1,128 @@
+hypothesis: the sentiment classifier mislabels sarcastic positive text as positive
+metadata:
+  generated_at: '2026-04-25T22:42:12.521714Z'
+  model: claude-haiku-4-5-20251001
+  budget_used: 45
+  budget_max: 100
+  status: ok
+  target_n: 5
+  config_name: sarcasm-sentiment
+test_cases:
+- input:
+    text: Oh wonderful, I just got stuck in traffic for three hours. Best day ever!
+  expected_behavior: The classifier correctly identified the sarcastic text as negative
+    sentiment, avoiding the failure of mislabeling surface-level positive words ('wonderful',
+    'best') as genuine positive sentiment.
+  discrimination_evidence:
+    current_output:
+      sentiment: positive
+    alternative_output:
+      sentiment: negative
+    current_verdict:
+      passed: false
+      reason: The classifier labeled clearly sarcastic text as positive, failing to
+        recognize the contradiction between surface-level positive words and the negative
+        underlying intent of being stuck in traffic.
+      judge_type: rubric
+    alternative_verdict:
+      passed: true
+      reason: The classifier correctly identified the sarcastic text as negative sentiment,
+        avoiding the failure of mislabeling surface-level positive words ('wonderful',
+        'best') as genuine positive sentiment.
+      judge_type: rubric
+- input:
+    text: Sure, I'd love to work this weekend instead of spending time with my family.
+      Sounds absolutely perfect.
+  expected_behavior: The classifier correctly identified the sarcastic text as negative,
+    recognizing the contradiction between surface-level positive words ('love,' 'perfect')
+    and the sarcastic intent to express dissatisfaction.
+  discrimination_evidence:
+    current_output:
+      sentiment: positive
+    alternative_output:
+      sentiment: negative
+    current_verdict:
+      passed: false
+      reason: The classifier labeled obviously sarcastic text as positive, failing
+        to recognize the contradiction between surface-level positive words ('love',
+        'perfect') and the sarcastic intent expressing genuine negativity about the
+        situation.
+      judge_type: rubric
+    alternative_verdict:
+      passed: true
+      reason: The classifier correctly identified the sarcastic text as negative,
+        recognizing the contradiction between surface-level positive words ('love,'
+        'perfect') and the sarcastic intent to express dissatisfaction.
+      judge_type: rubric
+- input:
+    text: The meeting ran 3 hours over schedule, everyone was frustrated, and half
+      the agenda was skipped. But sure, fantastic job organizing that, really stellar
+      work.
+  expected_behavior: The classifier correctly identified the text as negative despite
+    the presence of positive words ('fantastic', 'stellar'), recognizing the sarcastic
+    intent signaled by the contradictory context and tone markers ('But sure', 'really').
+  discrimination_evidence:
+    current_output:
+      sentiment: positive
+    alternative_output:
+      sentiment: negative
+    current_verdict:
+      passed: false
+      reason: The classifier labeled obviously sarcastic text as positive, failing
+        to recognize the sarcastic intent signaled by 'But sure' and 'really' contradicting
+        the negative context of delays, frustration, and incomplete agenda.
+      judge_type: rubric
+    alternative_verdict:
+      passed: true
+      reason: The classifier correctly identified the text as negative despite the
+        presence of positive words ('fantastic', 'stellar'), recognizing the sarcastic
+        intent signaled by the contradictory context and tone markers ('But sure',
+        'really').
+      judge_type: rubric
+- input:
+    text: Nothing beats a production database rollback at 2 AM on a Friday when you've
+      got a critical race condition in your async queue handler. Chef's kiss.
+  expected_behavior: The classifier correctly identified the sarcastic text as negative
+    despite surface-level positive phrases like 'Nothing beats' and 'Chef's kiss,'
+    recognizing the sarcasm's intended negative sentiment about a stressful situation.
+  discrimination_evidence:
+    current_output:
+      sentiment: positive
+    alternative_output:
+      sentiment: negative
+    current_verdict:
+      passed: false
+      reason: The classifier incorrectly labeled sarcastic negative text as positive,
+        failing to recognize that 'Chef's kiss' is being used ironically to mock a
+        stressful and undesirable situation.
+      judge_type: rubric
+    alternative_verdict:
+      passed: true
+      reason: The classifier correctly identified the sarcastic text as negative despite
+        surface-level positive phrases like 'Nothing beats' and 'Chef's kiss,' recognizing
+        the sarcasm's intended negative sentiment about a stressful situation.
+      judge_type: rubric
+- input:
+    text: I absolutely love getting my prior authorization denied by the insurance
+      company three times before they finally approve the medication my cardiologist
+      prescribed. The healthcare system works beautifully.
+  expected_behavior: The classifier correctly identified the sarcastic text as negative
+    sentiment, not being misled by positive words like 'love' and 'beautifully' that
+    are deployed sarcastically in a complaint about healthcare bureaucracy.
+  discrimination_evidence:
+    current_output:
+      sentiment: positive
+    alternative_output:
+      sentiment: negative
+    current_verdict:
+      passed: false
+      reason: The classifier labeled sarcastic text as positive despite clear sarcastic
+        markers ("absolutely love" applied to insurance denials, "works beautifully"
+        contradicting prior context) that indicate negative sentiment.
+      judge_type: rubric
+    alternative_verdict:
+      passed: true
+      reason: The classifier correctly identified the sarcastic text as negative sentiment,
+        not being misled by positive words like 'love' and 'beautifully' that are
+        deployed sarcastically in a complaint about healthcare bureaucracy.
+      judge_type: rubric

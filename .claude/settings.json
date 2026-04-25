@@ -3,7 +3,12 @@
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
-        "command": "cd $CLAUDE_PROJECT_DIR && python -m pytest tests/ -x -q -n auto --timeout=30 -m \"not live\" 2>&1 | tail -40"
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd $CLAUDE_PROJECT_DIR && python -m pytest tests/ -x -q -n auto --timeout=30 -m \"not live\" 2>&1 | tail -40"
+          }
+        ]
       }
     ]
   }

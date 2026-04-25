@@ -1,0 +1,45 @@
+"""Smoke tests for the Click group at hypothesize.cli.main."""
+
+from __future__ import annotations
+
+from click.testing import CliRunner
+
+from hypothesize import __version__
+from hypothesize.cli.main import cli
+
+
+def test_version_flag_prints_version() -> None:
+    runner = CliRunner()
+    result = runner.invoke(cli, ["--version"])
+    assert result.exit_code == 0
+    assert __version__ in result.output
+
+
+def test_help_lists_subcommands() -> None:
+    runner = CliRunner()
+    result = runner.invoke(cli, ["--help"])
+    assert result.exit_code == 0
+    for sub in ("run", "list", "validate"):
+        assert sub in result.output
+
+
+def test_run_help_describes_required_options() -> None:
+    runner = CliRunner()
+    result = runner.invoke(cli, ["run", "--help"])
+    assert result.exit_code == 0
+    for opt in ("--config", "--hypothesis", "--output", "--target-n", "--budget"):
+        assert opt in result.output
+
+
+def test_list_help_works() -> None:
+    runner = CliRunner()
+    result = runner.invoke(cli, ["list", "--help"])
+    assert result.exit_code == 0
+    assert "List benchmark" in result.output or "PATH" in result.output
+
+
+def test_validate_help_works() -> None:
+    runner = CliRunner()
+    result = runner.invoke(cli, ["validate", "--help"])
+    assert result.exit_code == 0
+    assert "Validate" in result.output
