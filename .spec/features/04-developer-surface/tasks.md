@@ -223,7 +223,7 @@ calls in this session.
 
 ## Task 4.8: Claude Code skill
 
-- Status: pending
+- Status: done
 - Depends: 4.2 (the SKILL.md references CLI invocations that must
   work)
 - Files:
