@@ -17,6 +17,156 @@ future sessions should know about.
 
 ## Entries
 
+## 2026-04-24 — Feature 04 complete
+
+- Decision: Feature 04 (developer-facing surface — CLI, Claude Code
+  skill, MCP server, sarcasm + hotpotqa examples) shipped end to end
+  using mocks-only testing. Live validation deferred to the user's
+  manual run after merge.
+- Coverage: 90% project-wide. Feature 04 modules at 85% (cli/ 87%,
+  mcp/ 80%). Above the 80% floor declared in `requirements.md`.
+- Test counts: 328 non-live tests passing in ~3s on 4 workers; 4
+  live tests still gated on `-m live`. 87 of those are new in
+  Feature 04 (CLI 33, MCP 21, examples 19, skill 7, harness 7).
+- Surfaces shipped:
+  - `hypothesize` CLI with `run`, `list`, `validate` subcommands.
+    Entry point in `pyproject.toml` fixed to `cli:cli` (was the
+    bootstrap-era `cli:main`).
+  - `.claude/skills/hypothesize/SKILL.md` describing the
+    complaint → discrimination → surface workflow.
+  - `src/hypothesize/mcp/server.py` (FastMCP) with five tools:
+    discover_systems, list_benchmarks, read_benchmark,
+    formulate_hypothesis, run_discrimination.
+  - `examples/sarcasm/` complete (system.py with the
+    prompt-factory convention, config.yaml using
+    alternative.adapter=auto, runnable README).
+  - `examples/hotpotqa/` scaffold (system.py with TODO body
+    raising NotImplementedError; README documenting manual
+    setup).
+  - README.md Quickstart section.
+
+### Resolved design decisions worth noting
+
+- **`RunConfig.alternative.adapter == "auto"`** is the auto-alt
+  sentinel. Resolved in `cli/runner.py` by calling
+  `make_auto_alternative` rather than introducing a new adapter
+  kind. Keeps `SystemConfig` (frozen by Feature 02) untouched.
+- **CLI's `--backend mock --mock-script PATH`** is a private test
+  seam. Reads a JSON list of strings, builds a `_ScriptedBackend`
+  inside `cli/run.py`. Documented in `--help` but not in the user
+  README. We did not import `MockBackend` from `tests/` — that
+  would invert the layering.
+- **Output YAML schema**: `hypothesis`, `metadata` (with
+  generated_at, model, budget_used, budget_max, status, target_n,
+  config_name), and `test_cases[]` with `input`,
+  `expected_behavior`, `discrimination_evidence`. When
+  insufficient, an `insufficient` block is appended.
+- **Skill philosophy**: SKILL.md is instructions to Claude, not
+  Python. The skill shells out to `hypothesize run` rather than
+  importing library code, so it stays agnostic to environment
+  mismatches between Claude Code's bundled venv and the user's
+  project venv.
+- **MCP uses FastMCP**, not the low-level `mcp.server.Server`.
+  Five JSON-in / JSON-out tools fit the high-level helper
+  cleanly; the low-level server is more flexible but unnecessary
+  here.
+- **`hypothesize-mcp` script entry not declared.** Documented
+  invocation is `python -m hypothesize.mcp.server`. Avoids
+  committing to a name that may need to change.
+
+### Deviations from `design.md` / `tasks.md`
+
+- The `cli/list.py` filename was changed to `cli/list_cmd.py` to
+  avoid shadowing the builtin `list`; tasks.md already calls this
+  out. Same pattern was used for `validate.py` (no shadowing
+  issue, but kept consistency with how the command function is
+  named `list_cmd` / `validate_cmd`).
+- A small `_ScriptedBackend` class was added inside
+  `src/hypothesize/cli/run.py` rather than re-using or re-locating
+  `tests/_fixtures/mock_backend.py::MockBackend`. The `tasks.md`
+  spec said "build a `MockBackend`"; the deviation is the
+  layering-clean realization. Functionally equivalent.
+- Tasks.md said tests/cli/test_run.py would have ~12 tests; we
+  wrote 6 (which cover all the documented exit codes and the
+  hypothesis-override-flag case). Plus 14 in test_config.py, 5 in
+  test_runner.py, 3 in test_output.py, 5 in test_main.py — 33
+  CLI tests total, comfortably above the spec target.
+
+### Manual validation steps for the user (after merge)
+
+These cannot be tested with mocks; live verification is the
+user's job.
+
+1. **Install + sanity-check the CLI**:
+
+   ```bash
+   pip install -e ".[dev]"
+   hypothesize --help
+   hypothesize --version
+   ```
+
+2. **Set the API key**:
+
+   ```bash
+   echo "ANTHROPIC_API_KEY=sk-ant-..." > .env
+   ```
+
+3. **Run the sarcasm example**:
+
+   ```bash
+   hypothesize run \
+     --config examples/sarcasm/config.yaml \
+     --hypothesis "the sentiment classifier mislabels sarcastic positive text"
+   ```
+
+   Expect: 60-90s wall time, $0.10-$0.20 in tokens, a YAML in
+   `tests/discriminating/` with `metadata.status: ok` and 5
+   discriminating cases.
+
+4. **Inspect the output**:
+
+   ```bash
+   hypothesize list .
+   hypothesize validate tests/discriminating/<your_file>.yaml
+   ```
+
+5. **Skill smoke**: in Claude Code, paste a sarcasm-shaped
+   complaint ("my sentiment classifier seems to mislabel
+   sarcastic reviews"). Confirm the hypothesize skill triggers,
+   asks at most one clarifying question, identifies the sarcasm
+   config, runs the CLI, and surfaces a representative case.
+
+6. **MCP smoke**: in another terminal,
+
+   ```bash
+   python -m hypothesize.mcp.server
+   ```
+
+   The server starts on stdio. Connect from Claude Desktop or any
+   MCP client and exercise at least one tool — `list_benchmarks .`
+   is the cheapest end-to-end check; `discover_systems .` and
+   `read_benchmark <path>` next.
+
+### Concerns to double-check during validation
+
+- `system.py`'s lazy backend construction uses
+  `claude-haiku-4-5-20251001` by default. Verify that survives a
+  real run; if Haiku occasionally fails to follow the
+  one-word-only constraint, the `_normalize_label` helper has to
+  carry the load. Mocked tests cover the normalization, but the
+  production prompt's adherence is empirical.
+- The MCP `formulate_hypothesis` tool calls Claude; with default
+  config, that is `claude-opus-4-7` (the AnthropicConfig default).
+  This may be slow / expensive for a single tool call. If the
+  user finds it sluggish, override `default_model` to Haiku in a
+  later spec.
+- `examples/hotpotqa/` deliberately raises `NotImplementedError`.
+  `discover_systems` will surface it as a candidate config; that
+  is fine because `RunConfig` validates without invoking the
+  runner. A user who picks the hotpotqa config and runs
+  `hypothesize run` without finishing the TODOs will see exit
+  code 3 and a runtime error message — by design.
+
 ## 2026-04-24 — Feature 02 complete
 
 - Decision: Feature 02 (real LLM integration + adapters) shipped end to end.

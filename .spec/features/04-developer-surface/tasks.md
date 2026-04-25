@@ -262,7 +262,7 @@ calls in this session.
 
 ## Task 4.10: Feature 04 review pass
 
-- Status: pending
+- Status: done
 - Depends: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 4.9
 - Files:
   - `DECISIONS.md` (append entry)
@@ -289,3 +289,20 @@ calls in this session.
       skill triggers.
     - Start the MCP server (`python -m hypothesize.mcp.server`)
       and exercise one tool via an MCP client.
+
+### Acceptance-criteria review (2026-04-24)
+
+| # | Criterion | Status |
+|---|---|---|
+| 1 | `hypothesize` console-script in pyproject.toml; `--help` works | PASS |
+| 2 | `hypothesize run` runs end-to-end with mocked backend | PASS — tests/cli/test_run.py |
+| 3 | Sensible defaults documented in `--help` | PASS — verified via `hypothesize run --help` |
+| 4 | `hypothesize list [PATH]` finds benchmark YAMLs | PASS — tests/cli/test_list_cmd.py |
+| 5 | `hypothesize validate PATH` exits 0/2 + summary | PASS — tests/cli/test_validate.py |
+| 6 | Output YAML schema documented in design.md and tested | PASS — tests/cli/test_output.py |
+| 7 | Skill at .claude/skills/hypothesize/SKILL.md, with workflow + tests | PASS — tests/test_skill.py |
+| 8 | MCP server with five tools, instantiable in-process | PASS — tests/mcp/test_server.py + test_tools.py |
+| 9 | examples/sarcasm/ complete with system.py, config.yaml, README.md | PASS — tests/examples/test_sarcasm.py |
+| 10 | examples/hotpotqa/ scaffolded with TODO markers | PASS — tests/examples/test_hotpotqa.py |
+| 11 | README.md Quickstart section walks the sarcasm example | PASS |
+| 12 | Test coverage on Feature 04 ≥ 80% with mocks only | PASS — 85% on cli/+mcp/, 90% project |
