@@ -9,9 +9,15 @@ scaffolded as import-clean stubs for later features.
 """
 
 from hypothesize.adapters.base import Runner, SystemAdapter
+from hypothesize.adapters.cli import CliAdapter
 from hypothesize.adapters.config import SystemConfig, load_system_config
+from hypothesize.adapters.http import HttpAdapter
+from hypothesize.adapters.python_module import PythonModuleAdapter
 
 __all__ = [
+    "CliAdapter",
+    "HttpAdapter",
+    "PythonModuleAdapter",
     "Runner",
     "SystemAdapter",
     "SystemConfig",

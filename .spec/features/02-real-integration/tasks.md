@@ -148,7 +148,7 @@
 
 ## Task 2.6: HTTP and CLI adapter stubs
 
-- Status: pending
+- Status: done
 - Depends: 2.4
 - Files: `src/hypothesize/adapters/http.py`,
   `src/hypothesize/adapters/cli.py`,
