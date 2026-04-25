@@ -171,3 +171,31 @@ Full evidence: `scripts/SMOKE_FINDINGS_2.md`.
 
 - Spec impact: `tasks.md` all seven tasks marked `done`. No other spec
   files touched.
+
+## 2026-04-24 — Rubric orientation diagnostic complete
+
+- Experiment ran in `scripts/diagnostics/`. See
+  `scripts/diagnostics/RUBRIC_FINDINGS.md` for full evidence (N=10 per
+  cell, four cells, ~$1.50 in API spend on Haiku 4.5 + Sonnet 4.6).
+- Recommendation: **Path A** — tighten `build_rubric_prompt` and
+  `rubric_judge_prompt` in `src/hypothesize/core/prompts.py` to pin
+  `passed=true = handles correctly, does NOT exhibit failure`
+  explicitly, and rewrite the builder to embed the convention into
+  the rubric body rather than describing what failure looks like.
+- Key evidence: tightened prompt on Haiku 4.5 was 10/10 correctly
+  oriented vs. 0/10 on the unmodified prompt — same model, same
+  inputs, the prompt is the only delta. Pairwise is also 30/30 on
+  Haiku, so Path B is viable but unnecessary.
+- Surprise: SMOKE_2 reported Haiku as 1/3 correctly oriented
+  (stochastic). The diagnostic at N=10 finds 0/10 correct (9 cleanly
+  inverted, 1 inconsistent). The current prompt is not a coin flip on
+  Haiku — it is reliably read backwards. Most likely SMOKE_2's 1/3 was
+  sample variance over a true rate near zero.
+- Open question: only one hypothesis (sarcasm classifier) and one
+  model below Sonnet (Haiku 4.5) were exercised. A weaker-signal
+  failure mode could re-introduce ambiguity. Re-run smoke against a
+  non-classifier scenario after the fix lands.
+- Action: a fix session will implement Path A against
+  `src/hypothesize/core/prompts.py` and add the offline regression
+  test for the discrimination-predicate orientation. Not done in this
+  session.
