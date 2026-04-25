@@ -191,7 +191,7 @@ calls in this session.
 
 ## Task 4.7: MCP tool implementations
 
-- Status: pending
+- Status: done
 - Depends: 4.6
 - Files:
   - `src/hypothesize/mcp/tools.py` (new)
