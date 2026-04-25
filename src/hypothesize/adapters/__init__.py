@@ -8,13 +8,20 @@ implemented adapter in Feature 02; the HTTP and CLI adapters are
 scaffolded as import-clean stubs for later features.
 """
 
+from hypothesize.adapters.auto_alternative import make_auto_alternative
 from hypothesize.adapters.base import Runner, SystemAdapter
 from hypothesize.adapters.cli import CliAdapter
 from hypothesize.adapters.config import SystemConfig, load_system_config
+from hypothesize.adapters.errors import (
+    AutoAlternativeUnavailable,
+    BudgetExhausted,
+)
 from hypothesize.adapters.http import HttpAdapter
 from hypothesize.adapters.python_module import PythonModuleAdapter
 
 __all__ = [
+    "AutoAlternativeUnavailable",
+    "BudgetExhausted",
     "CliAdapter",
     "HttpAdapter",
     "PythonModuleAdapter",
@@ -22,4 +29,5 @@ __all__ = [
     "SystemAdapter",
     "SystemConfig",
     "load_system_config",
+    "make_auto_alternative",
 ]

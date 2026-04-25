@@ -163,7 +163,7 @@
 
 ## Task 2.7: Automatic alternative generation
 
-- Status: pending
+- Status: done
 - Depends: 2.3, 2.5
 - Files: `src/hypothesize/adapters/auto_alternative.py`,
   `src/hypothesize/adapters/errors.py` (defines
