@@ -50,6 +50,10 @@ hypothesize list .
 hypothesize validate tests/discriminating/<your_file>.yaml
 ```
 
+A representative output from a real run is checked in at
+`examples/sarcasm/example_output.yaml`. Open it to preview the
+schema before paying for your own run.
+
 Open the generated YAML in your editor. Each `test_cases` entry has:
 
 - `input`: the input data the system was tested with
