@@ -216,6 +216,27 @@ def test_run_uses_hypothesis_flag_over_yaml(tmp_path: Path) -> None:
     assert parsed["hypothesis"] == "OVERRIDDEN HYPOTHESIS"
 
 
+def test_run_exit_2_when_anthropic_key_missing(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Default backend without the configured API key env var exits 2."""
+    cfg_path, _, _ = _write_explicit_alt_config(tmp_path)
+    # Use a custom api_key_env name we know is not set anywhere.
+    raw = yaml.safe_load(cfg_path.read_text())
+    raw["llm"] = {"api_key_env": "HYPOTHESIZE_TEST_NEVER_SET_KEY"}
+    cfg_path.write_text(yaml.safe_dump(raw))
+    monkeypatch.delenv("HYPOTHESIZE_TEST_NEVER_SET_KEY", raising=False)
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        ["run", "--config", str(cfg_path), "--hypothesis", "x"],
+    )
+    assert result.exit_code == 2
+    assert "HYPOTHESIZE_TEST_NEVER_SET_KEY" in (
+        result.output + (result.stderr or "")
+    )
+
+
 def test_run_exit_2_when_no_hypothesis_anywhere(tmp_path: Path) -> None:
     """Config with no hypothesis block AND no --hypothesis flag => error."""
     cfg_path, _, _ = _write_explicit_alt_config(tmp_path)

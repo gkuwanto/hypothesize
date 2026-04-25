@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import re
 import sys
 from datetime import UTC, datetime
@@ -91,10 +92,22 @@ def _build_backend(
                 "--mock-script must contain a JSON list of strings"
             )
         return _ScriptedBackend(responses=[str(r) for r in responses])
-    # Default: real Anthropic backend. We import lazily so tests that
-    # set --backend=mock never construct AsyncAnthropic clients.
+    # Default: real Anthropic backend. Load .env so users who follow
+    # the documented "set ANTHROPIC_API_KEY in .env" instruction get
+    # picked up automatically. Imports are lazy so --backend=mock
+    # paths never touch dotenv or AsyncAnthropic.
+    from dotenv import load_dotenv
+
     from hypothesize.llm.anthropic import AnthropicBackend
 
+    load_dotenv()
+    key_env = config.llm.api_key_env or "ANTHROPIC_API_KEY"
+    if not os.environ.get(key_env):
+        raise click.UsageError(
+            f"{key_env} is not set. Add it to .env at the repo root "
+            f"(ANTHROPIC_API_KEY=sk-ant-...) or export it in your "
+            f"shell, then re-run."
+        )
     return AnthropicBackend(config=config.llm)
 
 

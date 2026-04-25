@@ -12,6 +12,7 @@ default ``AnthropicBackend``, and tests inject a ``MockBackend``.
 
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -27,6 +28,35 @@ from hypothesize.core.json_extract import parse_json_response
 from hypothesize.core.llm import LLMBackend
 from hypothesize.core.types import Budget, Hypothesis
 from hypothesize.mcp.prompts import formulate_hypothesis_messages
+
+
+def _default_anthropic_backend(config_: Any = None) -> Any:
+    """Build the default ``AnthropicBackend`` for tool callers.
+
+    Loads ``.env`` so users who follow the documented "set
+    ANTHROPIC_API_KEY in .env" instruction get picked up
+    automatically, and raises a clear error before instantiating the
+    SDK if the key is still missing. Imports are lazy so the test
+    paths that supply their own ``backend`` never touch dotenv.
+    """
+    from dotenv import load_dotenv
+
+    from hypothesize.llm.anthropic import AnthropicBackend
+
+    load_dotenv()
+    key_env = (
+        (config_.llm.api_key_env if config_ is not None else None)
+        or "ANTHROPIC_API_KEY"
+    )
+    if not os.environ.get(key_env):
+        raise RuntimeError(
+            f"{key_env} is not set. Add it to .env at the repo root "
+            f"or export it in the MCP server's environment."
+        )
+    if config_ is not None:
+        return AnthropicBackend(config=config_.llm)
+    return AnthropicBackend()
+
 
 # ----------------------------------------------------------------------
 # discover_systems
@@ -129,9 +159,7 @@ async def formulate_hypothesis(
     tests pass a ``MockBackend`` directly.
     """
     if backend is None:
-        from hypothesize.llm.anthropic import AnthropicBackend
-
-        backend = AnthropicBackend()
+        backend = _default_anthropic_backend()
 
     messages = formulate_hypothesis_messages(complaint, context or {})
     raw = await backend.complete(messages)
@@ -167,9 +195,7 @@ async def run_discrimination(
     config = load_run_config(Path(config_path))
 
     if backend is None:
-        from hypothesize.llm.anthropic import AnthropicBackend
-
-        backend = AnthropicBackend(config=config.llm)
+        backend = _default_anthropic_backend(config_=config)
 
     hyp = Hypothesis(text=hypothesis)
     budget_obj = Budget(max_llm_calls=budget)
