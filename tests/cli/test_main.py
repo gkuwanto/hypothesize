@@ -31,15 +31,15 @@ def test_run_help_describes_required_options() -> None:
         assert opt in result.output
 
 
-def test_list_stub_exits_zero_with_placeholder() -> None:
+def test_list_help_works() -> None:
     runner = CliRunner()
-    result = runner.invoke(cli, ["list"])
+    result = runner.invoke(cli, ["list", "--help"])
     assert result.exit_code == 0
-    assert "not implemented" in result.output
+    assert "List benchmark" in result.output or "PATH" in result.output
 
 
-def test_validate_stub_exits_zero_with_placeholder() -> None:
+def test_validate_help_works() -> None:
     runner = CliRunner()
-    result = runner.invoke(cli, ["validate"])
+    result = runner.invoke(cli, ["validate", "--help"])
     assert result.exit_code == 0
-    assert "not implemented" in result.output
+    assert "Validate" in result.output

@@ -11,7 +11,9 @@ from __future__ import annotations
 import click
 
 from hypothesize import __version__
+from hypothesize.cli.list_cmd import list_cmd
 from hypothesize.cli.run import run_cmd
+from hypothesize.cli.validate import validate_cmd
 
 
 @click.group(
@@ -23,15 +25,5 @@ def cli() -> None:
 
 
 cli.add_command(run_cmd)
-
-
-@cli.command(name="list")
-def list_cmd() -> None:
-    """List existing benchmark YAMLs in a directory."""
-    click.echo("list not implemented yet")
-
-
-@cli.command(name="validate")
-def validate_cmd() -> None:
-    """Validate a benchmark YAML against the documented schema."""
-    click.echo("validate not implemented yet")
+cli.add_command(list_cmd)
+cli.add_command(validate_cmd)

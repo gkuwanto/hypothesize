@@ -87,7 +87,7 @@ calls in this session.
 
 ## Task 4.3: `hypothesize list` and `hypothesize validate`
 
-- Status: pending
+- Status: done
 - Depends: 4.2
 - Files:
   - `src/hypothesize/cli/list_cmd.py` (new — module name avoids
