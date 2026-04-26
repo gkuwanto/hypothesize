@@ -3,13 +3,24 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "hypothesize"
+name = "hypothesize-cli"
 version = "0.1.0"
 description = "Turn LLM failure hypotheses into minimum discriminating regression benchmarks."
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [{name = "Garry"}]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Testing",
+    "Topic :: Software Development :: Quality Assurance",
+]
 dependencies = [
     "anthropic>=0.40.0",
     "pydantic>=2.0",
@@ -33,11 +44,27 @@ dev = [
     "mypy>=1.10",
 ]
 
+[project.urls]
+Homepage = "https://github.com/gkuwanto/hypothesize"
+Repository = "https://github.com/gkuwanto/hypothesize"
+Issues = "https://github.com/gkuwanto/hypothesize/issues"
+
 [project.scripts]
 hypothesize = "hypothesize.cli.main:cli"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/hypothesize"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/hypothesize/skill/SKILL.md" = "hypothesize/skill/SKILL.md"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/hypothesize",
+    "README.md",
+    "LICENSE",
+    "pyproject.toml",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

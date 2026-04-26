@@ -520,3 +520,91 @@ Full evidence: `scripts/SMOKE_FINDINGS_2.md`.
   property of a string, deterministic to compute. Path J1 is
   ~50 lines including tests; an LLM-based rubric would have cost
   3-4× more and risked rubric-orientation regressions.
+
+## 2026-04-26 — Setup wizard and release packaging complete
+
+- Added `hypothesize setup` interactive wizard. Subcommand registered
+  in `src/hypothesize/cli/main.py`; orchestration logic lives in
+  `src/hypothesize/setup/{detect,env,install_skill,install_mcp,wizard}.py`.
+- Bundled the Claude Code skill at `src/hypothesize/skill/SKILL.md`
+  (canonical copy) plus a force-include rule in `pyproject.toml` so it
+  ships in the wheel. The legacy copy at
+  `.claude/skills/hypothesize/SKILL.md` stays for the demo repo's own
+  use; both files are byte-identical at session end (verified with
+  `diff`). Future updates must edit both files together.
+- `installer locates the bundled skill via importlib.resources`, not
+  `__file__`. Verified end-to-end: `bundled_skill_path()` resolves to
+  `…/site-packages/hypothesize/skill/SKILL.md` after a fresh wheel
+  install.
+- Wheel builds clean with hatchling (148 KB, 50 entries). Fresh-venv
+  install + `hypothesize setup --non-interactive ... --skip-claude-code
+  --skip-claude-desktop --config-dir /tmp/hyp-test-cfg` ran in 50ms,
+  wrote `/tmp/hyp-test-cfg/.env` with mode 0600. uvx invocation also
+  works:
+  `uvx --from dist/hypothesize_cli-0.1.0-py3-none-any.whl hypothesize --help`.
+- Test count: 442 (was 364) → +78 covering setup. Coverage of
+  `src/hypothesize/setup/` is high; key invariants pinned:
+  - API key never appears in stdout/stderr (sentinel-key tests in
+    `tests/cli/test_setup.py` and `tests/setup/test_wizard.py`).
+  - `.env` written with mode `0600`.
+  - Claude Desktop config writes are atomic (sibling temp file +
+    `os.replace`); malformed JSON surfaces an error without
+    overwriting.
+  - The MCP entry uses `sys.executable`, so it works in pip, uvx, and
+    venv installs alike.
+- Verification (`--verify`): default-off; opt-in only. Skipped this
+  session (would require a live API call); test coverage uses a
+  mocked `_verify_api_key`.
+
+### PyPI naming
+
+`hypothesize` was already taken on PyPI, so the distribution name is
+`hypothesize-cli`. Import name (`import hypothesize`) and console
+script (`hypothesize`) remain unchanged. README install instructions
+use `pip install hypothesize-cli` and
+`uvx --from hypothesize-cli hypothesize ...`.
+
+### Manual steps for the user (after this session)
+
+1. **Update GitHub URLs.** `pyproject.toml` has placeholder URLs at
+   `gkuwanto/hypothesize`. If the repo lives elsewhere, edit
+   `[project.urls]` and the `git clone` line in `README.md`.
+2. **Register PyPI account and publish.** This session does NOT
+   publish — credentials are yours. To publish:
+
+   ```bash
+   python -m build           # produces dist/hypothesize_cli-0.1.0.*
+   python -m twine upload dist/*
+   ```
+
+   Test on TestPyPI first if you want a dry run:
+   `python -m twine upload --repository testpypi dist/*`.
+3. **Tag the release.** After publish:
+   `git tag v0.1.0 && git push origin v0.1.0`.
+4. **Smoke-test the install** on a clean machine: `pip install
+   hypothesize-cli && hypothesize setup` — verify the skill installs
+   into `~/.claude/skills/hypothesize/` and Claude Desktop picks up
+   the MCP entry on restart.
+5. **Sync future SKILL.md edits** to both copies. A pre-commit guard
+   would be the right durable fix; out of scope for this session.
+
+### Deviations from the brief
+
+- The brief sketched `--config-dir` as a path that may not exist; we
+  create it in the CLI command body via `ensure_config_dir(path)` so
+  no special handling is needed downstream.
+- The brief listed expected commits as "8 roughly"; this session
+  produced 6 commits with the same coverage (one bundled-skill
+  commit, four feat(setup) commits, one chore(release) commit, and a
+  trailing docs commit). The combined wizard + CLI + tests commit is
+  larger than recommended but tests + module are tightly coupled and
+  splitting would land tests-without-implementation intermediate
+  commits.
+- Added a `--verify` / `--no-verify` flag (boolean) instead of a
+  one-shot prompt — same effect, but selectable from
+  `--non-interactive` mode too.
+- Did NOT add a `MANIFEST.in`. Hatchling's `force-include` is enough
+  to ship the bundled `SKILL.md` in both sdist and wheel; verified
+  with `unzip -l`.
+
+
