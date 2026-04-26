@@ -230,3 +230,74 @@ def test_dummy_clears_env() -> None:
     assert os.environ.get("ANTHROPIC_API_KEY", "") == os.environ.get(
         "ANTHROPIC_API_KEY", ""
     )
+
+
+# ---------------------------------------------------------------------------
+# load_dotenv_chain
+# ---------------------------------------------------------------------------
+
+
+def test_load_dotenv_chain_picks_up_global_when_cwd_empty(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """When cwd has no .env, the ~/.config/hypothesize/.env value is loaded."""
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.chdir(tmp_path)
+    fake_home = tmp_path / "home"
+    (fake_home / ".config" / "hypothesize").mkdir(parents=True)
+    key = "sk-ant-" + "L" * 40
+    (fake_home / ".config" / "hypothesize" / ".env").write_text(
+        f"ANTHROPIC_API_KEY={key}\n"
+    )
+    with mock.patch.object(Path, "home", return_value=fake_home):
+        env.load_dotenv_chain()
+    assert os.environ.get("ANTHROPIC_API_KEY") == key
+
+
+def test_load_dotenv_chain_local_wins_over_global(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A cwd .env value takes precedence over the global config file."""
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.chdir(tmp_path)
+    local_key = "sk-ant-" + "M" * 40
+    global_key = "sk-ant-" + "N" * 40
+    (tmp_path / ".env").write_text(f"ANTHROPIC_API_KEY={local_key}\n")
+    fake_home = tmp_path / "home"
+    (fake_home / ".config" / "hypothesize").mkdir(parents=True)
+    (fake_home / ".config" / "hypothesize" / ".env").write_text(
+        f"ANTHROPIC_API_KEY={global_key}\n"
+    )
+    with mock.patch.object(Path, "home", return_value=fake_home):
+        env.load_dotenv_chain()
+    assert os.environ.get("ANTHROPIC_API_KEY") == local_key
+
+
+def test_load_dotenv_chain_noop_when_neither_exists(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.chdir(tmp_path)
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    with mock.patch.object(Path, "home", return_value=fake_home):
+        env.load_dotenv_chain()
+    assert "ANTHROPIC_API_KEY" not in os.environ
+
+
+def test_load_dotenv_chain_does_not_override_existing_env(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An already-set ANTHROPIC_API_KEY in os.environ wins over both files."""
+    shell_key = "sk-ant-" + "S" * 40
+    file_key = "sk-ant-" + "F" * 40
+    monkeypatch.setenv("ANTHROPIC_API_KEY", shell_key)
+    monkeypatch.chdir(tmp_path)
+    fake_home = tmp_path / "home"
+    (fake_home / ".config" / "hypothesize").mkdir(parents=True)
+    (fake_home / ".config" / "hypothesize" / ".env").write_text(
+        f"ANTHROPIC_API_KEY={file_key}\n"
+    )
+    with mock.patch.object(Path, "home", return_value=fake_home):
+        env.load_dotenv_chain()
+    assert os.environ.get("ANTHROPIC_API_KEY") == shell_key

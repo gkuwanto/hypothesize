@@ -36,22 +36,25 @@ def _default_anthropic_backend(config_: Any = None) -> Any:
     Loads ``.env`` so users who follow the documented "set
     ANTHROPIC_API_KEY in .env" instruction get picked up
     automatically, and raises a clear error before instantiating the
-    SDK if the key is still missing. Imports are lazy so the test
-    paths that supply their own ``backend`` never touch dotenv.
+    SDK if the key is still missing. The chain helper checks the
+    project's .env (walking up from cwd) and then the canonical
+    ``hypothesize setup`` location at ~/.config/hypothesize/.env.
+    Imports are lazy so the test paths that supply their own
+    ``backend`` never touch dotenv.
     """
-    from dotenv import load_dotenv
-
     from hypothesize.llm.anthropic import AnthropicBackend
+    from hypothesize.setup.env import load_dotenv_chain
 
-    load_dotenv()
+    load_dotenv_chain()
     key_env = (
         (config_.llm.api_key_env if config_ is not None else None)
         or "ANTHROPIC_API_KEY"
     )
     if not os.environ.get(key_env):
         raise RuntimeError(
-            f"{key_env} is not set. Add it to .env at the repo root "
-            f"or export it in the MCP server's environment."
+            f"{key_env} is not set. Run `hypothesize setup` to write it "
+            f"to ~/.config/hypothesize/.env, or export it in the MCP "
+            f"server's environment."
         )
     if config_ is not None:
         return AnthropicBackend(config=config_.llm)

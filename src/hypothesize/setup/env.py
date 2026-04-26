@@ -103,6 +103,34 @@ def detect_existing_key(env_files: list[Path]) -> DetectedKey | None:
     return None
 
 
+def load_dotenv_chain() -> None:
+    """Load the API key from the project + global dotenv files.
+
+    Order (first match wins because ``load_dotenv`` defaults to
+    ``override=False``):
+
+    1. ``./.env`` in the current working directory (project override).
+    2. ``~/.config/hypothesize/.env`` (the canonical location written
+       by ``hypothesize setup``).
+
+    Already-set process env vars (e.g. ``export ANTHROPIC_API_KEY=...``
+    in the user's shell) win over both files. This is the standard
+    dotenv contract.
+    """
+    from dotenv import find_dotenv, load_dotenv
+
+    # find_dotenv(usecwd=True) walks UP from cwd looking for a .env, the
+    # standard dotenv discovery behavior so a user running `hypothesize
+    # run` from a subdirectory of a project still finds the project's
+    # .env. Returns "" when nothing is found.
+    project_env = find_dotenv(usecwd=True)
+    if project_env:
+        load_dotenv(project_env)
+    global_env = default_env_path()
+    if global_env.exists():
+        load_dotenv(global_env)
+
+
 def _read_key_from_file(path: Path) -> str | None:
     """Return the ``ANTHROPIC_API_KEY=...`` value from a .env-style file.
 

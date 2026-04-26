@@ -96,19 +96,21 @@ def _build_backend(
         return _ScriptedBackend(responses=[str(r) for r in responses])
     # Default: real Anthropic backend. Load .env so users who follow
     # the documented "set ANTHROPIC_API_KEY in .env" instruction get
-    # picked up automatically. Imports are lazy so --backend=mock
-    # paths never touch dotenv or AsyncAnthropic.
-    from dotenv import load_dotenv
-
+    # picked up automatically. The chain helper checks the project's
+    # .env first (walking up from cwd) and then the canonical
+    # `hypothesize setup` location at ~/.config/hypothesize/.env.
+    # Imports are lazy so --backend=mock paths never touch dotenv or
+    # AsyncAnthropic.
     from hypothesize.llm.anthropic import AnthropicBackend
+    from hypothesize.setup.env import load_dotenv_chain
 
-    load_dotenv()
+    load_dotenv_chain()
     key_env = config.llm.api_key_env or "ANTHROPIC_API_KEY"
     if not os.environ.get(key_env):
         raise click.UsageError(
-            f"{key_env} is not set. Add it to .env at the repo root "
-            f"(ANTHROPIC_API_KEY=sk-ant-...) or export it in your "
-            f"shell, then re-run."
+            f"{key_env} is not set. Run `hypothesize setup` to write it "
+            f"to ~/.config/hypothesize/.env, add it to a project .env, "
+            f"or export it in your shell, then re-run."
         )
     return AnthropicBackend(config=config.llm)
 

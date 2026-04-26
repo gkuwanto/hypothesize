@@ -152,8 +152,14 @@ def test_non_interactive_full_install(tmp_path: Path) -> None:
     assert "hypothesize" in payload["mcpServers"]
     # The mcp entry's env file must point at the same .env we just wrote.
     assert payload["mcpServers"]["hypothesize"]["env"][
-        "ANTHROPIC_API_KEY_FILE"
+        "HYPOTHESIZE_API_KEY_FILE"
     ] == str(cfg_dir / ".env")
+    # And the entry invokes the launcher (which loads the key file)
+    # rather than the bare server module.
+    assert payload["mcpServers"]["hypothesize"]["args"] == [
+        "-m",
+        "hypothesize.mcp.launch",
+    ]
 
 
 def test_non_interactive_summary_emits_status_glyphs(tmp_path: Path) -> None:

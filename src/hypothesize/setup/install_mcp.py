@@ -35,11 +35,17 @@ def build_mcp_entry(env_file: Path) -> dict[str, Any]:
     at the same Python interpreter the user installed hypothesize
     into, regardless of whether that's a system Python, a venv, or a
     uvx-managed temporary environment.
+
+    The launch module loads ``~/.config/hypothesize/.env`` itself, so
+    Claude Desktop does not need to forward the API key. The
+    ``HYPOTHESIZE_API_KEY_FILE`` env entry is passed for documentation
+    only — it records which file the launcher should pick up first if
+    a future revision honors it as an explicit override.
     """
     return {
         "command": sys.executable,
-        "args": ["-m", "hypothesize.mcp.server"],
-        "env": {"ANTHROPIC_API_KEY_FILE": str(env_file)},
+        "args": ["-m", "hypothesize.mcp.launch"],
+        "env": {"HYPOTHESIZE_API_KEY_FILE": str(env_file)},
     }
 
 

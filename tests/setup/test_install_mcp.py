@@ -20,8 +20,9 @@ def _write_config(path: Path, payload: dict) -> None:
 def test_build_entry_uses_sys_executable() -> None:
     entry = install_mcp.build_mcp_entry(env_file=Path("/cfg/.env"))
     assert entry["command"] == sys.executable
-    assert entry["args"] == ["-m", "hypothesize.mcp.server"]
-    assert entry["env"]["ANTHROPIC_API_KEY_FILE"] == "/cfg/.env"
+    # The launcher module loads dotenv chain before starting the server.
+    assert entry["args"] == ["-m", "hypothesize.mcp.launch"]
+    assert entry["env"]["HYPOTHESIZE_API_KEY_FILE"] == "/cfg/.env"
 
 
 def test_register_creates_config_when_missing(tmp_path: Path) -> None:
@@ -34,7 +35,7 @@ def test_register_creates_config_when_missing(tmp_path: Path) -> None:
     assert "hypothesize" in payload["mcpServers"]
     assert payload["mcpServers"]["hypothesize"]["args"] == [
         "-m",
-        "hypothesize.mcp.server",
+        "hypothesize.mcp.launch",
     ]
 
 
