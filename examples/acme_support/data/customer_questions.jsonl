@@ -1,0 +1,30 @@
+{"id": "q01", "question": "How do I reset my password?", "category": "account_access"}
+{"id": "q02", "question": "I can't log in to my account, what should I do?", "category": "account_access"}
+{"id": "q03", "question": "My account has been locked, can you help?", "category": "account_access"}
+{"id": "q04", "question": "How do I change the email address on my account?", "category": "account_access"}
+{"id": "q05", "question": "I forgot my username, how do I find it?", "category": "account_access"}
+{"id": "q06", "question": "Why was my card charged twice this month?", "category": "billing"}
+{"id": "q07", "question": "How do I cancel my subscription?", "category": "billing"}
+{"id": "q08", "question": "Can I get a refund for last month's charge?", "category": "billing"}
+{"id": "q09", "question": "My payment failed but money was deducted, where did it go?", "category": "billing"}
+{"id": "q10", "question": "How do I update my credit card information?", "category": "billing"}
+{"id": "q11", "question": "The export feature isn't working for me, any ideas?", "category": "product_issues"}
+{"id": "q12", "question": "I keep getting an error 500 when I save, what's happening?", "category": "product_issues"}
+{"id": "q13", "question": "The app is really slow today, is there an outage?", "category": "product_issues"}
+{"id": "q14", "question": "I lost all my work after the update, can it be recovered?", "category": "product_issues"}
+{"id": "q15", "question": "Notifications stopped coming through to my phone, why?", "category": "product_issues"}
+{"id": "q16", "question": "Where is my order? It was supposed to arrive yesterday.", "category": "order_status"}
+{"id": "q17", "question": "Can you give me a tracking number for order 48291?", "category": "order_status"}
+{"id": "q18", "question": "My package is marked delivered but I never got it.", "category": "order_status"}
+{"id": "q19", "question": "How long does shipping usually take?", "category": "order_status"}
+{"id": "q20", "question": "Can I change the delivery address on my order?", "category": "order_status"}
+{"id": "q21", "question": "How do I return an item I bought last week?", "category": "returns_refunds"}
+{"id": "q22", "question": "When will I get my refund? It's been two weeks.", "category": "returns_refunds"}
+{"id": "q23", "question": "Do you cover the return shipping cost?", "category": "returns_refunds"}
+{"id": "q24", "question": "Can I exchange a product instead of returning it?", "category": "returns_refunds"}
+{"id": "q25", "question": "The item I got is broken, what are my options?", "category": "returns_refunds"}
+{"id": "q26", "question": "What are your customer service hours?", "category": "general_support"}
+{"id": "q27", "question": "Do you have a phone number I can call?", "category": "general_support"}
+{"id": "q28", "question": "Is support available in Spanish?", "category": "general_support"}
+{"id": "q29", "question": "How do I contact a real human, not a bot?", "category": "general_support"}
+{"id": "q30", "question": "Where can I find your terms of service?", "category": "general_support"}

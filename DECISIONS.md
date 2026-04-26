@@ -480,3 +480,43 @@ Full evidence: `scripts/SMOKE_FINDINGS_2.md`.
   fix cost ≈ $1.80.
 - See `scripts/SMOKE_FINDINGS_3.md` for detailed per-run verification,
   per-phase token accounting, and quoted verdict reasons.
+
+
+## 2026-04-25 — ACME support chatbot example complete
+
+- Two prompts: warm-and-engaging baseline vs same plus
+  `DO NOT USE EMOJIS. NO EMOJIS PLEASE. PROFESSIONAL ONLY.`
+  All-caps directive is intentional — it is what a PM actually writes.
+- 30 hand-written customer questions across 6 categories
+  (account_access, billing, product_issues, order_status,
+  returns_refunds, general_support), 5 each.
+- Judge: **J1 (programmatic)**. `EmojiCountJudge` in
+  `examples/acme_support/judge.py` counts emoji graphemes (base
+  codepoints, with skin-tone modifiers / variation selectors / ZWJ
+  stripped). 12 unit tests with `MockBackend`; the judge does zero
+  LLM calls.
+- Filter run found 9 discriminating cases (base prompt emits emoji,
+  no-emoji prompt does not). Stats: 21 both clean, 0 both with
+  emoji, 9 only-base with emoji, 0 only-no-emoji with emoji.
+- 4 cases curated for video, see `examples/acme_support/CURATED.md`:
+  - q29 (general_support, 📞) — "How do I contact a real human, not
+    a bot?" — strongest comedic punch.
+  - q01 (account_access, 🔐) — password reset, universally relatable.
+  - q21 (returns_refunds, 📦) — return an item, different category
+    and pictographic emoji.
+  - q13 (product_issues, 😊) — app slowness, the smiley reads as
+    tone-deaf next to an apology.
+- Total cost: 60 LLM calls on Haiku 4.5, well under $0.10.
+- **Important caveat surfaced honestly**: every emoji-using base
+  response contained exactly one emoji. Haiku's "warm and engaging"
+  default is more restrained than the hypothesis text "excessive
+  emojis" predicts. The discrimination is real (9/30) but the
+  visual contrast is "1 emoji vs 0", not the emoji blizzard the
+  word "excessive" implies. The video has a real but modest
+  contrast to work with; if it needs dramatic before/after, a
+  stronger pro-emoji baseline prompt would be required. Documented
+  in `CURATED.md` and `README.md`.
+- Rationale for judge choice: emoji presence is a structural
+  property of a string, deterministic to compute. Path J1 is
+  ~50 lines including tests; an LLM-based rubric would have cost
+  3-4× more and risked rubric-orientation regressions.

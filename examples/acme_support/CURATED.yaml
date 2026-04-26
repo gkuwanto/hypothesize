@@ -1,0 +1,82 @@
+hypothesis: "the chatbot uses excessive emojis in customer support responses"
+generated_at: "2026-04-25T00:00:00Z"
+model: "claude-haiku-4-5-20251001"
+candidate_pool_size: 30
+discriminating_count: 9
+note: >-
+  Every emoji-using BASE response contained exactly one emoji. Haiku's
+  "warm and engaging" default is more restrained than the hypothesis
+  predicted (which expected 5+ per response). The discrimination is
+  real but visual contrast is "1 emoji vs 0", not the dramatic
+  emoji-blizzard implied by the hypothesis text.
+cases:
+  - case_number: 1
+    id: q29
+    question: "How do I contact a real human, not a bot?"
+    base_response: |
+      I appreciate you asking! I'm actually an AI assistant, but I'm here to help with many common questions right away. If you need to speak with a human team member, I can direct you to our contact options—could you tell me what you're trying to resolve so I can point you to the best resource? 📞
+    base_emoji_count: 1
+    no_emoji_response: |
+      I'd be happy to help! If you'd prefer to speak with a team member, you can reach our customer support line at 1-800-ACME-NOW during business hours (Monday-Friday, 9 AM-6 PM EST), and a real person will assist you. Is there anything I can help you with in the meantime?
+    no_emoji_count: 0
+    category: general_support
+    why_selected: >-
+      Strongest comedic punch in the set. The customer asks for a
+      human and the bot's emoji (📞) is itself a tell that they're
+      talking to a bot. The no-emoji variant is also functionally
+      better — it actually gives a phone number instead of emoji
+      handwaving.
+
+  - case_number: 2
+    id: q01
+    question: "How do I reset my password?"
+    base_response: |
+      I'd be happy to help you reset your password! 🔐
+
+      Here's how: Visit our login page and click **"Forgot Password?"** at the bottom. Enter your email address, and we'll send you a reset link. Just follow the instructions in that email to create a new password, and you'll be all set!
+
+      Is there anything else I can help you with?
+    base_emoji_count: 1
+    no_emoji_response: |
+      I'd be happy to help you reset your password! Please visit our login page and click the "Forgot Password" link, then enter the email address associated with your account. You'll receive an email with instructions to create a new password within a few minutes. If you don't see it, please check your spam folder.
+    no_emoji_count: 0
+    category: account_access
+    why_selected: >-
+      Most universally relatable question (everyone has reset a
+      password). 🔐 is a strongly pictographic emoji and the visual
+      contrast carries even with only one emoji on screen. Markdown
+      bold in BASE adds extra "AI-cheerful" texture next to the plain
+      no-emoji rewrite.
+
+  - case_number: 3
+    id: q21
+    question: "How do I return an item I bought last week?"
+    base_response: |
+      I'd be happy to help you with a return! To get you the most accurate information, could you tell me a bit more—like what item you're returning and whether there's an issue with it? In most cases, we offer returns within 30 days with a receipt, so you should be all set! 📦
+    base_emoji_count: 1
+    no_emoji_response: |
+      I'd be happy to help you with your return. To get you the quickest assistance, could you please provide your order number or the email address associated with your account? Once I have that information, I can look up your purchase and walk you through our return process.
+    no_emoji_count: 0
+    category: returns_refunds
+    why_selected: >-
+      Different category and a different pictographic emoji (📦),
+      diversifying the reel away from face-style smileys. Both
+      responses are short enough to fit a phone screen. Question is
+      common and clear.
+
+  - case_number: 4
+    id: q13
+    question: "The app is really slow today, is there an outage?"
+    base_response: |
+      I'm sorry you're experiencing slowness! We're not currently aware of a major outage, but there can sometimes be intermittent performance issues. A few quick things to try: restart the app, clear your cache, or check if your internet connection is stable. If it's still sluggish after that, please let me know and I can escalate this to our technical team! 😊
+    base_emoji_count: 1
+    no_emoji_response: |
+      I understand how frustrating that must be. We haven't reported any widespread outages at the moment, but app performance can be affected by various factors like network connectivity or server load. Have you tried clearing your app cache or restarting the app? If the issue persists, I'm happy to look into this further for you.
+    no_emoji_count: 0
+    category: product_issues
+    why_selected: >-
+      The 😊 at the end of an apology for app slowness reads as
+      tone-deaf — the emoji's chipperness contrasts with a customer
+      complaint. The no-emoji rewrite leads with empathy ("I
+      understand how frustrating") instead. Strong demonstration of
+      tone-fit beyond just emoji count.
