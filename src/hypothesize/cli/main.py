@@ -13,6 +13,7 @@ import click
 from hypothesize import __version__
 from hypothesize.cli.list_cmd import list_cmd
 from hypothesize.cli.run import run_cmd
+from hypothesize.cli.setup import setup_cmd
 from hypothesize.cli.validate import validate_cmd
 
 
@@ -27,3 +28,4 @@ def cli() -> None:
 cli.add_command(run_cmd)
 cli.add_command(list_cmd)
 cli.add_command(validate_cmd)
+cli.add_command(setup_cmd)
